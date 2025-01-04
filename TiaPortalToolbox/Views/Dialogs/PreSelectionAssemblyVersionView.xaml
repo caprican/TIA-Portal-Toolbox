@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="TiaPortalToolbox.Views.Dialogs.PreSelectionAssemblyVersionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:properties="clr-namespace:TiaPortalToolbox.Properties"
+             xmlns:viewmodels="clr-namespace:TiaPortalToolbox.ViewModels">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <Grid Margin="{StaticResource XXSmallMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static properties:Resources.PreSelectionAssemblyTiaPortalVersionText}" />
+            <ComboBox Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" ItemsSource="{Binding EngineeringVersions}" SelectedItem="{Binding EngineeringVersion}" />
+            <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static properties:Resources.PreSelectionAssemblyOpennessVersionText}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" VerticalContentAlignment="Center" ItemsSource="{Binding OpennessApiVersions, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding OpennessApiVersion}" />
+        </Grid>
+
+        <CheckBox Grid.Row="2" Margin="4" HorizontalAlignment="Center" Content="{x:Static properties:Resources.PreSelectionAssemblyHideDialogText}" IsChecked="{Binding HidePreSelectionAssemblyVersionDialog}" />
+        <Button Grid.Row="3" Margin="4" Command="{Binding CloseCommand}" 
+                Content="{x:Static properties:Resources.PreSelectionAssemblyConfirmText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs}"/>
+
+    </Grid>
+</UserControl>

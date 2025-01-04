@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="TiaPortalToolbox.Views.Dialogs.SelectProjectDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             xmlns:properties="clr-namespace:TiaPortalToolbox.Properties"
+             xmlns:viewmodels="clr-namespace:TiaPortalToolbox.ViewModels">
+    <Grid Margin="{StaticResource XXSmallMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ListBox ItemsSource="{Binding Processes}" DisplayMemberPath="{Binding ProjectName}" SelectedItem="{Binding SelectedProcess}"/>
+        <UniformGrid Grid.Row="1" Rows="1">
+
+            <Button Margin="{StaticResource SmallLeftRightMargin}" Command="{Binding AttachCommand}" 
+                    Content="{x:Static properties:Resources.SelectProjectDialogAttachButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs}"/>
+
+            <Button Margin="{StaticResource SmallLeftRightMargin}" Command="{Binding CloseCommand}" 
+                    Content="{x:Static properties:Resources.SelectProjectDialogCancelButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs.Accent}"/>
+        </UniformGrid>
+    </Grid>
+</UserControl>
