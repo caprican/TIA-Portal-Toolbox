@@ -95,9 +95,4 @@ public class Hmi : Devices.Object
         }
         return tags;
     }
-
-    public override Task<bool> ExportAsync(string path)
-    {
-        return Task.FromResult(false);
-    }
 }

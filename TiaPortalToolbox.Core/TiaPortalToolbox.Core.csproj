@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SimaticML\SimaticML\SimaticML.csproj" />
+    <ProjectReference Include="..\TiaPortalToolbox.Markdown\TiaPortalToolbox.Doc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

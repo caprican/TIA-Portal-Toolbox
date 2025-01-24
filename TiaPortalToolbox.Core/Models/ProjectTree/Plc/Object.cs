@@ -1,8 +1,22 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 
 namespace TiaPortalToolbox.Core.Models.ProjectTree.Plc;
 
 [DebuggerDisplay("{DisplayName}")]
 public abstract class Object(string Name, string? Path) : ProjectTree.Object(Name, Path)
 {
+    public List<Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>>>? Comments { get; set; }
+
+    public Dictionary<CultureInfo, string>? Title { get; set; }
+    public Dictionary<CultureInfo, string>? Author { get; set; }
+    public Dictionary<CultureInfo, string>? Comment { get; set; }
+    public Dictionary<CultureInfo, string>? Function { get; set; }
+    public Dictionary<CultureInfo, string>? Library { get; set; }
+    public Dictionary<CultureInfo, string>? Family { get; set; }
+    public Dictionary<CultureInfo, string>? Description { get; set; }
+
+    public Dictionary<CultureInfo, List<InterfaceMember>>? Members { get; set; }
+
+    public Dictionary<CultureInfo, List<PlcBlockLog>>? Logs { get; set; }
 }

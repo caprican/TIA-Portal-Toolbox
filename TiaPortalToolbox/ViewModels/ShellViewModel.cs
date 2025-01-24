@@ -88,7 +88,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
         progress.SetIndeterminate();
 
-        await item.ExportAsync("");
+        await opennessService.ExportAsync(item);
         
         await progress.CloseAsync();
     }

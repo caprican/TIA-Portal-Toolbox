@@ -5,9 +5,4 @@ namespace TiaPortalToolbox.Core.Models.ProjectTree.Unified;
 public class TagTable(HmiTagTable HmiTag, string Path) : Unified.Object(HmiTag.Name, Path)
 {
     public override string? DisplayName => Name;
-
-    public override Task<bool> ExportAsync(string path)
-    {
-        return Task.FromResult(false);
-    }
 }

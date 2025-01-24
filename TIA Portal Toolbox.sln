@@ -7,7 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiaPortalToolbox", "TiaPort
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiaPortalToolbox.Core", "TiaPortalToolbox.Core\TiaPortalToolbox.Core.csproj", "{9B93D1F3-93B9-4DEB-B658-9EC6AEF54C44}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External projects", "External projects", "{92238C87-E2A6-4AE3-9C07-993FEE10F7CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiaPortalToolbox.Doc", "TiaPortalToolbox.Markdown\TiaPortalToolbox.Doc.csproj", "{9DAA306C-34C8-4AF0-812B-8601F65A4251}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External projects", "External projects", "{B53EBD88-F75F-4BA3-98F5-D28D66850B11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimaticML", "..\SimaticML\SimaticML\SimaticML.csproj", "{72ED49F6-813E-4842-8D0A-FEB9983A3844}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiaPortalToolbox.Console", "TiaPortalToolbox.Console\TiaPortalToolbox.Console.csproj", "{39BD6311-B217-4762-9AD6-D6BFB5F7F457}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,8 +29,23 @@ Global
 		{9B93D1F3-93B9-4DEB-B658-9EC6AEF54C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B93D1F3-93B9-4DEB-B658-9EC6AEF54C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B93D1F3-93B9-4DEB-B658-9EC6AEF54C44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DAA306C-34C8-4AF0-812B-8601F65A4251}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DAA306C-34C8-4AF0-812B-8601F65A4251}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DAA306C-34C8-4AF0-812B-8601F65A4251}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DAA306C-34C8-4AF0-812B-8601F65A4251}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72ED49F6-813E-4842-8D0A-FEB9983A3844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72ED49F6-813E-4842-8D0A-FEB9983A3844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72ED49F6-813E-4842-8D0A-FEB9983A3844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72ED49F6-813E-4842-8D0A-FEB9983A3844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{72ED49F6-813E-4842-8D0A-FEB9983A3844} = {B53EBD88-F75F-4BA3-98F5-D28D66850B11}
 	EndGlobalSection
 EndGlobal

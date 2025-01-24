@@ -11,6 +11,8 @@ using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Core.Services;
+using TiaPortalToolbox.Doc.Contracts.Services;
+using TiaPortalToolbox.Doc.Services;
 using TiaPortalToolbox.Models;
 using TiaPortalToolbox.Services;
 using TiaPortalToolbox.ViewModels;
@@ -62,6 +64,8 @@ public partial class App : Application
 
         // Core Services
         services.AddSingleton<IFileService, FileService>();
+
+        services.AddTransient<IMarkdownService, MarkdownService>();
 
         // Services
         services.AddSingleton<IWindowManagerService, WindowManagerService>();

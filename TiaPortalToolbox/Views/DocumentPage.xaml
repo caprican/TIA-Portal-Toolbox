@@ -41,31 +41,68 @@
     </Page.Resources>
     
     <Page.Content>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Border Grid.Row="0" BorderThickness="2" Margin="2" CornerRadius="5" BorderBrush="{StaticResource Fluent.Ribbon.Brushes.Black20}">
-                <StackPanel Margin="2" Orientation="Vertical">
-                    <TextBlock Text="{Binding PlcObjectView.Name}" Style="{StaticResource PageTitleStyle}"/>
-                    <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
-                        <Run Text="Author : "/>
-                        <Run Text="{Binding Author}"/>
-                    </TextBlock>
-                    <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
-                        <Run Text="Library : "/>
-                        <Run Text="{Binding Library}"/>
-                    </TextBlock>
-                    <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
-                        <Run Text="Family : "/>
-                        <Run Text="{Binding Family}"/>
-                    </TextBlock>
-                    <TextBlock Text="Description" Style="{StaticResource SubtitleTextStyle}"/>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}" TextWrapping="WrapWithOverflow"/>
+            <StackPanel Orientation="Vertical" ScrollViewer.CanContentScroll="True" ScrollViewer.PanningMode="VerticalFirst" CanVerticallyScroll="True">
+                
+                <TextBlock Text="{Binding PlcBlock.Name}" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="{Binding ShortDescription}" Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallMargin}" TextWrapping="WrapWithOverflow"/>
+                <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
+                    <Run Text="Author : "/>
+                    <Run Text="{Binding Author}"/>
+                </TextBlock>
+                <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
+                    <Run Text="Library : "/>
+                    <Run Text="{Binding Library}"/>
+                </TextBlock>
+                <TextBlock Style="{StaticResource BodyTextStyle}" Margin="{StaticResource SmallLeftRightMargin}">
+                    <Run Text="Family : "/>
+                    <Run Text="{Binding Family}"/>
+                </TextBlock>
+                
+                
+                <!--<TextBlock Text="Description" Style="{StaticResource SubtitleTextStyle}"/>-->
 
-                    <ListView ItemsSource="{Binding Logs}">
+                <Expander Header="Interface">
+                    <ListView ItemsSource="{Binding InterfaceMembers}" Grid.Row="3" Margin="{StaticResource MediumLeftRightMargin}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}"/>
+                                <GridViewColumn Header="Default value" DisplayMemberBinding="{Binding DefaultValue}"/>
+                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}"/>
+                            </GridView>
+                        </ListView.View>
+                        <!--<ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.ContainerStyle>
+                                    <Style TargetType="GroupItem">
+                                        <Setter Property="Margin" Value="0,0,0,5"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                    <Expander IsExpanded="False">
+                                                        <Expander.Header>
+                                                            <DockPanel>
+                                                                <TextBlock FontWeight="Bold" Text="{Binding Name}" Margin="5,0,0,0"/>
+                                                            </DockPanel>
+                                                        </Expander.Header>
+                                                        <Expander.Content>
+                                                            <ItemsPresenter />
+                                                        </Expander.Content>
+                                                    </Expander>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </GroupStyle.ContainerStyle>
+                            </GroupStyle>
+                        </ListView.GroupStyle>-->
+                    </ListView>
+                </Expander>
+                <!--<TextBlock Grid.Row="2" Text="Interface" Style="{StaticResource SubtitleTextStyle}" Margin="{StaticResource SmallTopMargin}"/>-->
+
+                <Expander Header="Log">
+                    
+                    <ListView ItemsSource="{Binding Logs}" Margin="{StaticResource MediumLeftRightMargin}" ScrollViewer.CanContentScroll="True">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}"/>
@@ -75,45 +112,12 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                </StackPanel>
-            </Border>
-            <TextBlock Grid.Row="1" Text="Interface" Style="{StaticResource SubtitleTextStyle}"/>
-            <ListView Grid.Row="2" Margin="{StaticResource SmallLeftRightMargin}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                        <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}"/>
-                        <GridViewColumn Header="Default value" DisplayMemberBinding="{Binding DefaultValue}"/>
-                        <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}"/>
-                    </GridView>
-                </ListView.View>
-                <ListView.GroupStyle>
-                    <GroupStyle>
-                        <GroupStyle.ContainerStyle>
-                            <Style TargetType="GroupItem">
-                                <Setter Property="Margin" Value="0,0,0,5"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="{x:Type GroupItem}">
-                                            <Expander IsExpanded="False">
-                                                <Expander.Header>
-                                                    <DockPanel>
-                                                        <TextBlock FontWeight="Bold" Text="{Binding Name}" Margin="5,0,0,0"/>
-                                                    </DockPanel>
-                                                </Expander.Header>
-                                                <Expander.Content>
-                                                    <ItemsPresenter />
-                                                </Expander.Content>
-                                            </Expander>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </GroupStyle.ContainerStyle>
-                    </GroupStyle>
-                </ListView.GroupStyle>
-            </ListView>
-            <!--<TextBlock Grid.Row="2" Text="{Binding Description}" TextWrapping="WrapWithOverflow"/>-->
-        </Grid>
+                </Expander>
+
+            
+            <TextBox Grid.Row="5" Text="{Binding Description}" TextWrapping="WrapWithOverflow" ScrollViewer.CanContentScroll="True" AcceptsReturn="True" AcceptsTab="True" BorderThickness="0"/>
+            </StackPanel>
+        <!--<ScrollViewer>
+        </ScrollViewer>-->
     </Page.Content>
 </Page>

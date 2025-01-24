@@ -90,9 +90,4 @@ public class Unified : Devices.Object
         }
         return tags;
     }
-
-    public override Task<bool> ExportAsync(string path)
-    {
-        throw new NotImplementedException();
-    }
 }

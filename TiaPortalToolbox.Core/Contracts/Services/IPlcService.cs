@@ -2,5 +2,5 @@
 
 public interface IPlcService
 {
-    public void GetMetaDataBlock(ref Models.ProjectTree.Object plcItem);
+    public Task GetMetaDataBlockAsync(Models.ProjectTree.Plc.Object plcItem);
 }

@@ -6,9 +6,4 @@ public class Unknow : Devices.Object
     {
 
     }
-
-    public override Task<bool> ExportAsync(string path)
-    {
-        return Task.FromResult(false);
-    }
 }

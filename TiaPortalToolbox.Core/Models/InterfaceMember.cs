@@ -1,6 +1,6 @@
 ﻿namespace TiaPortalToolbox.Core.Models;
 
-internal class InterfaceMember
+public class InterfaceMember
 {
     public string? Name { get; set; }
 
@@ -10,7 +10,7 @@ internal class InterfaceMember
 
     //public string DerivedType { get; set; }
 
-    public Dictionary<string, string>? Description { get; set; }
+    public string? Description { get; set; }
 
     public string DefaultValue { get; set; } = string.Empty;
 

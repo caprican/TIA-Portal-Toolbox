@@ -101,22 +101,22 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
             Type = member.Datatype
         };
 
-        foreach (var item in member.Items)
-        {
-            switch (item)
-            {
-                case SimaticML.SW.Common.Comment comment:
-                    foreach (var multiLangugageText in comment.MultiLanguageText)
-                    {
-                        tag.Description ??= [];
-                        tag.Description.Add(multiLangugageText.Lang, multiLangugageText.Value);
-                    }
-                    break;
-                case SimaticML.SW.InterfaceSections.Member_T memberItem:
-                    subTags.AddRange(GetInterfaceMember(memberItem, tag.Name));
-                    break;
-            }
-        }
+        //foreach (var item in member.Items)
+        //{
+        //    switch (item)
+        //    {
+        //        //case SimaticML.SW.Common.Comment comment:
+        //        //    foreach (var multiLangugageText in comment.MultiLanguageText)
+        //        //    {
+        //        //        tag.Description ??= [];
+        //        //        tag.Description.Add(multiLangugageText.Lang, multiLangugageText.Value);
+        //        //    }
+        //        //    break;
+        //        case SimaticML.SW.InterfaceSections.Member_T memberItem:
+        //            subTags.AddRange(GetInterfaceMember(memberItem, tag.Name));
+        //            break;
+        //    }
+        //}
         tags.Add(tag);
         tags.AddRange(subTags);
 
@@ -142,63 +142,63 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
                             var myFile = new FileStream(exportPath, FileMode.Open);
                             if (serializer.Deserialize(myFile) is SimaticML.Document document)
                             {
-                                foreach (var exportedGlobalDataBlock in document.Items.Where(sw => sw is SimaticML.SW.Blocks.GlobalDB).Cast<SimaticML.SW.Blocks.GlobalDB>())
-                                {
-                                    var exportGlobalDB = exportedGlobalDataBlock.AttributeList.Interface.Sections.FirstOrDefault(section => section.Name == SimaticML.SW.Common.SectionName_TE.Static);
-                                    if (exportGlobalDB is not null)
-                                    {
+                                //foreach (var exportedGlobalDataBlock in document.Items.Where(sw => sw is SimaticML.SW.Blocks.GlobalDB).Cast<SimaticML.SW.Blocks.GlobalDB>())
+                                //{
+                                //    //var exportGlobalDB = exportedGlobalDataBlock.AttributeList.Interface.Sections.FirstOrDefault(section => section.Name == SimaticML.SW.Common.SectionName_TE.Static);
+                                //    //if (exportGlobalDB is not null)
+                                //    //{
 
-                                        Debug.WriteLine($"{DateTime.Now.ToLocalTime()} - {log} : {block.Name}");
+                                //    //    Debug.WriteLine($"{DateTime.Now.ToLocalTime()} - {log} : {block.Name}");
 
-                                        var alarmsClassName = defaultAlarmsClass;
-                                        foreach (var exportedMember in exportGlobalDB.Member)
-                                        {
-                                            foreach (var member in GetInterfaceMember(exportedMember))
-                                            {
-                                                switch (member.Type)
-                                                {
-                                                    case "Struct":
+                                //    //    var alarmsClassName = defaultAlarmsClass;
+                                //    //    foreach (var exportedMember in exportGlobalDB.Member)
+                                //    //    {
+                                //    //        foreach (var member in GetInterfaceMember(exportedMember))
+                                //    //        {
+                                //    //            switch (member.Type)
+                                //    //            {
+                                //    //                case "Struct":
 
-                                                        foreach (var lang in opennessService.ProjectLanguages)
-                                                        {
-                                                            if (member.Description?.ContainsKey(lang.Name) == true)
-                                                            {
-                                                                var txt = member.Description[lang.Name];
-                                                                if (!string.IsNullOrEmpty(txt))
-                                                                {
-                                                                    var match = Regex.Match(txt, @"\[AlarmClass=(.+?)\]", RegexOptions.IgnoreCase);
-                                                                    alarmsClassName = GetAlarmsClassName(connexion.UnifiedDevice, match.Groups[1].Value, member.Name, defaultAlarmsClass);
-                                                                    break;
-                                                                }
-                                                            }
-                                                        }
+                                //    //                    foreach (var lang in opennessService.ProjectLanguages)
+                                //    //                    {
+                                //    //                        //if (member.Description?.ContainsKey(lang.Name) == true)
+                                //    //                        //{
+                                //    //                        //    var txt = member.Description[lang.Name];
+                                //    //                        //    if (!string.IsNullOrEmpty(txt))
+                                //    //                        //    {
+                                //    //                        //        var match = Regex.Match(txt, @"\[AlarmClass=(.+?)\]", RegexOptions.IgnoreCase);
+                                //    //                        //        alarmsClassName = GetAlarmsClassName(connexion.UnifiedDevice, match.Groups[1].Value, member.Name, defaultAlarmsClass);
+                                //    //                        //        break;
+                                //    //                        //    }
+                                //    //                        //}
+                                //    //                    }
 
-                                                        //Debug.WriteLine($"{DateTime.Now.ToLocalTime()} - {log} : {globalDb.Block.Name} class found {member.Name}");
-                                                        break;
-                                                    case "Bool":
-                                                        //tags.Add(new TIAOpennessAdapter.Models.UnifiedTag
-                                                        //{
-                                                        //    Hmi = connexion.UnifiedDevice,
-                                                        //    Connexion = connexion.Name,
-                                                        //    PlcTag = $"{(block.Name.Contains(' ') ? $"\"{block.Name}\"" : block.Name)}.{member.Name}",
-                                                        //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
-                                                        //    Folder = block.Parent
-                                                        //});
-                                                        //alarms.Add(new TIAOpennessAdapter.Models.UnifiedAlarm
-                                                        //{
-                                                        //    Hmi = connexion.UnifiedDevice,
-                                                        //    ClassName = alarmsClassName,
-                                                        //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
-                                                        //    Origin = block.Name.Replace(markBlock, string.Empty),
-                                                        //    Descriptions = member.Description,
-                                                        //});
-                                                        break;
-                                                }
-                                            }
-                                        }
-                                    }
+                                //    //                    //Debug.WriteLine($"{DateTime.Now.ToLocalTime()} - {log} : {globalDb.Block.Name} class found {member.Name}");
+                                //    //                    break;
+                                //    //                case "Bool":
+                                //    //                    //tags.Add(new TIAOpennessAdapter.Models.UnifiedTag
+                                //    //                    //{
+                                //    //                    //    Hmi = connexion.UnifiedDevice,
+                                //    //                    //    Connexion = connexion.Name,
+                                //    //                    //    PlcTag = $"{(block.Name.Contains(' ') ? $"\"{block.Name}\"" : block.Name)}.{member.Name}",
+                                //    //                    //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
+                                //    //                    //    Folder = block.Parent
+                                //    //                    //});
+                                //    //                    //alarms.Add(new TIAOpennessAdapter.Models.UnifiedAlarm
+                                //    //                    //{
+                                //    //                    //    Hmi = connexion.UnifiedDevice,
+                                //    //                    //    ClassName = alarmsClassName,
+                                //    //                    //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
+                                //    //                    //    Origin = block.Name.Replace(markBlock, string.Empty),
+                                //    //                    //    Descriptions = member.Description,
+                                //    //                    //});
+                                //    //                    break;
+                                //    //            }
+                                //    //        }
+                                //    //    }
+                                //    //}
 
-                                }
+                                //}
                             }
                         }
                     }

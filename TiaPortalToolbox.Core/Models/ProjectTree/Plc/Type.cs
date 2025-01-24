@@ -10,9 +10,4 @@ public class Type(PlcType Type, string? Path) : Plc.Object(Type.Name, Path)
     internal PlcType PlcType = Type;
 
     public override string? DisplayName => Name;
-
-    public override Task<bool> ExportAsync(string path)
-    {
-        return Task.FromResult(false);
-    }
 }

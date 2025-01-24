@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -13,4 +14,5 @@ public abstract class Object(string Name, string? Path) : ObservableObject
 
     public ObservableCollection<Object>? Items { get; set; }
 
+    public List<CultureInfo>? Languages { get; set; }
 }

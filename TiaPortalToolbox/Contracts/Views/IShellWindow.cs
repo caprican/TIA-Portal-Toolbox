@@ -6,7 +6,7 @@ namespace TiaPortalToolbox.Contracts.Views;
 
 public interface IShellWindow
 {
-    public event EventHandler? SelectedItemChanged;
+    public event EventHandler<Core.Models.ProjectTree.Object>? SelectedItemChanged;
 
     Frame? GetNavigationFrame();
 

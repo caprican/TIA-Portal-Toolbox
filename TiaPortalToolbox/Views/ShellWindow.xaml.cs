@@ -23,7 +23,7 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 
     public static readonly DependencyProperty TitleBarProperty = TitleBarPropertyKey.DependencyProperty;
 
-    public event EventHandler? SelectedItemChanged;
+    public event EventHandler<Core.Models.ProjectTree.Object>? SelectedItemChanged;
 
     public ShellWindow(IPageService pageService, ShellViewModel viewModel, INavigationService navigationService)
     {
@@ -59,6 +59,7 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        if(e.NewValue is Core.Models.ProjectTree.Object item)
+        SelectedItemChanged?.Invoke(this, item);
     }
 }
