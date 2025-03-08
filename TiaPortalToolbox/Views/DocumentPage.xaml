@@ -16,8 +16,7 @@
             <behaviors:RibbonPageConfiguration.Tabs>
                 <Fluent:RibbonTabItem x:Name="ribbonTabItem" Fluent:KeyTip="A" Header="ListDetails" behaviors:RibbonTabsBehavior.IsTabFromPage="True">
                     <Fluent:RibbonGroupBox State="Large" MinWidth="150" Header="Data">
-                        <Fluent:Button Size="Large" Header="Refresh" Command="{Binding RefreshCommand}" />
-                        <!--LargeIcon="Images\Refresh.png" Icon="Images\Refresh.png"-->
+                        <Fluent:Button Size="Large" Header="Document" Command="{Binding BuildDocumentCommand}" />
                     </Fluent:RibbonGroupBox>
 
                     <Fluent:RibbonGroupBox State="Middle" MinWidth="150"

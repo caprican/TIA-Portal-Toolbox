@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using System.IO;
 
+using Siemens.Collaboration.Net.CoreExtensions.Conversion;
 using Siemens.Engineering;
 using Siemens.Engineering.Hmi;
 using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.HmiUnified.HmiTags;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Multiuser;
+using Siemens.Engineering.Settings;
 using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
 
+using TiaPortalToolbox.Core.Helpers;
 using TiaPortalToolbox.Core.Models.ProjectTree;
 using TiaPortalToolbox.Core.Models.ProjectTree.Devices;
 
@@ -401,27 +404,6 @@ public class OpennessService : Contracts.Services.IOpennessService
         return tcs.Task;
     }
 
-    private Models.ProjectTree.Object? GetItemTreeByName(string ItemName, ObservableCollection<Models.ProjectTree.Object>? projectTrees)
-    {
-        if (projectTrees?.SingleOrDefault(s => s.Name == ItemName) is Models.ProjectTree.Object projetItem)
-        {
-            return projetItem;
-        }
-        else
-        {
-            if(projectTrees is not null)
-            {
-                foreach (var item in projectTrees)
-                {
-                    var itemFound = GetItemTreeByName(ItemName, item.Items);
-                    if(itemFound is not null) return itemFound;
-                }
-            }
-
-        }
-        return null;
-    }
-
     private List<T>? GetItemTree<T>(ObservableCollection<Models.ProjectTree.Object>? projectTrees) where T : Models.ProjectTree.Object
     {
         List<T>? result = projectTrees?.OfType<T>().ToList();
@@ -477,24 +459,22 @@ public class OpennessService : Contracts.Services.IOpennessService
                     path = ExportFolder;
                 }
 
+                var exportPath = new FileInfo(Path.Combine(path, $"{projectItem.Name}.xml"));
+                if (!Directory.Exists(exportPath.DirectoryName))
+                {
+                    Directory.CreateDirectory(exportPath.DirectoryName);
+                }
+
+                if (File.Exists(exportPath.FullName))
+                {
+                    File.Delete(exportPath.FullName);
+                }
+
                 switch (projectItem)
                 {
                     case Models.ProjectTree.Plc.Blocks.Object plcBlock:
-
-                        var exportPath = new FileInfo(Path.Combine(path, $"{projectItem.Name}.xml"));
-                        if (!Directory.Exists(exportPath.DirectoryName))
-                        {
-                            Directory.CreateDirectory(exportPath.DirectoryName);
-                        }
-
-                        if (File.Exists(exportPath.FullName))
-                        {
-                            File.Delete(exportPath.FullName);
-                        }
-
-                        plcBlock.PlcBlock.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
+                        plcBlock.PlcBlock?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
                         exportedPaths.Add(exportPath.FullName);
-
                         break;
                     case Models.ProjectTree.Plc.Item plcItem:
                         if (plcItem.Items?.Count > 0)
@@ -505,6 +485,14 @@ public class OpennessService : Contracts.Services.IOpennessService
                             }
                         }
                         break;
+                    case Models.ProjectTree.Plc.Type plcType:
+                        plcType.PlcType?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
+                        exportedPaths.Add(exportPath.FullName);
+                        break;
+                    case Models.ProjectTree.Plc.Tag plcTag:
+                        plcTag.TagTable?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
+                        exportedPaths.Add(exportPath.FullName);
+                        break;
                 }
                 tcs.SetResult([.. exportedPaths]);
             }
@@ -514,6 +502,183 @@ public class OpennessService : Contracts.Services.IOpennessService
             }
         });
         return tcs.Task;
+    }
 
+    public Task<string[]?> ExportAsync(IEngineeringObject projectItem, string? path = null)
+    {
+        var tcs = new TaskCompletionSource<string[]?>();
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                List<string> exportedPaths = [];
+                if (string.IsNullOrEmpty(path))
+                {
+                    path = ExportFolder;
+                }
+
+                switch (projectItem)
+                {
+                    case HmiTagTable hmiTagTable:
+                        var directoryExport = new DirectoryInfo(Path.Combine(path, hmiTagTable.Name));
+                        if (Directory.Exists(directoryExport.FullName))
+                        {
+                            Directory.Delete(directoryExport.FullName, true);
+                        }
+                        exportedPaths.AddRange(hmiTagTable.Tags.Export(directoryExport).Select(s => s.FullName));
+                        break;
+                    //case Models.ProjectTree.Plc.Item plcItem:
+                    //    if (plcItem.Items?.Count > 0)
+                    //    {
+                    //        foreach (var item in plcItem.Items)
+                    //        {
+                    //            exportedPaths.AddRange(ExportAsync(item, path).Result);
+                    //        }
+                    //    }
+                    //    break;
+                }
+                tcs.SetResult([.. exportedPaths]);
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetException(ex);
+            }
+        });
+        return tcs.Task;
+    }
+
+    public Task<Models.ProjectTree.Object?> GetItem(string blockName)
+    {
+        var tcs = new TaskCompletionSource<Models.ProjectTree.Object?>();
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                if (projectsTreeItems is null)
+                {
+                    tcs.SetResult(null);
+                }
+                else
+                {
+                    var item = GetItemTree<Models.ProjectTree.Plc.Object>(projectsTreeItems, blockName).FirstOrDefault();
+                    tcs.SetResult(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetException(ex);
+            }
+        });
+        return tcs.Task;
+    }
+
+    private Models.ProjectTree.Object? FindItemInProjectDevices(DeviceComposition devices, string parentPath, string blockName)
+    {
+        Models.ProjectTree.Object? deviceItems = null;
+        if (devices?.Count > 0)
+        {
+            foreach (var device in devices)
+            {
+                foreach (var deviceItem in device.DeviceItems)
+                {
+                    switch (deviceItem.GetService<SoftwareContainer>()?.Software)
+                    {
+                        case PlcSoftware plcSoftware:
+                            PlcHelper.FindPlcBlocks(plcSoftware, blockName, Path.Combine(parentPath, device.Name));
+                            PlcHelper.FindPlcTypes(plcSoftware, blockName, Path.Combine(parentPath, device.Name));
+                            PlcHelper.FindPlcTags(plcSoftware, blockName, Path.Combine(parentPath, device.Name));
+                            break;
+                        case HmiTarget hmiTarget:
+
+                            break;
+                        case HmiSoftware hmiSoftware:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        return deviceItems;
+    }
+
+    private List<Models.ProjectTree.Object>? FindItemInProjectDeviceGroups(DeviceUserGroupComposition devicesGroups, string parentPath, string blockName)
+    {
+        List<Models.ProjectTree.Object>? groups = null;
+
+        if (devicesGroups?.Count > 0)
+        {
+            var deviceGroup = devicesGroups.ToList();
+            var groupPath = parentPath;
+            do
+            {
+                ObservableCollection<Models.ProjectTree.Object>? groupItems = null;
+
+                if (FindItemInProjectDevices(deviceGroup[0].Devices, Path.Combine(groupPath, deviceGroup[0].Name), blockName) is Models.ProjectTree.Object devices)
+                {
+                    
+                }
+
+                if (deviceGroup[0].Groups?.Count > 0 &&
+                    FindItemInProjectDeviceGroups(deviceGroup[0].Groups, Path.Combine(groupPath, deviceGroup[0].Name), blockName) is List<Models.ProjectTree.Object> lstGroup)
+                {
+                    groupItems ??= [];
+                    groupItems.AddRange(lstGroup);
+                }
+
+                if (groupItems is not null)
+                {
+                    groups ??= [];
+                    groups.Add(new Models.ProjectTree.Item(deviceGroup[0].Name, Path.Combine(groupPath, deviceGroup[0].Name))
+                    {
+                        Items = groupItems
+                    });
+                }
+                deviceGroup.RemoveAt(0);
+            } while (deviceGroup.Count > 0);
+        }
+
+        return groups;
+    }
+
+
+
+
+
+
+
+    private static void GetDeviceList(ref List<Siemens.Engineering.HW.Device> devices, Siemens.Engineering.Project project)
+    {
+        // First return devices from the root folder
+        foreach (Siemens.Engineering.HW.Device device in project.Devices)
+        {
+            devices.Add(device);
+        }
+
+        // then get devices from ungrouped devices
+        foreach (Siemens.Engineering.HW.Device device in project.UngroupedDevicesGroup.Devices)
+        {
+            devices.Add(device);
+        }
+
+        // Last crawl trough all devicegroups and their sub groups
+        foreach (Siemens.Engineering.HW.DeviceUserGroup devicegroup in project.DeviceGroups)
+        {
+            recurciveGetDeviceList(ref devices, devicegroup);
+        }
+    }
+
+    private static void recurciveGetDeviceList(ref List<Siemens.Engineering.HW.Device> devices,
+    Siemens.Engineering.HW.DeviceUserGroup devicegroup)
+    {
+        foreach (Siemens.Engineering.HW.Device device in devicegroup.Devices)
+        {
+            devices.Add(device);
+        }
+        foreach (Siemens.Engineering.HW.DeviceUserGroup devicesubgroup in devicegroup.Groups)
+        {
+            recurciveGetDeviceList(ref devices, devicesubgroup);
+        }
     }
 }

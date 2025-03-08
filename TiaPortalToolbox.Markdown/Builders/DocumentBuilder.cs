@@ -1,168 +1,171 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using System.Globalization;
+using System.Reflection;
+
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml;
+
+using Microsoft.Extensions.Options;
+
+using TiaPortalToolbox.Doc.Contracts.Builders;
+using TiaPortalToolbox.Doc.Contracts.Factories;
+using TiaPortalToolbox.Doc.Helpers;
+using TiaPortalToolbox.Doc.Models;
 
 namespace TiaPortalToolbox.Doc.Builders;
 
-internal class DocumentBuilder
+public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFactory pageFactory) : IDocumentBuilder
 {
-    private readonly Document document;
+    private readonly Models.DocumentSettings? settings = settings?.Value;
+    private readonly IPageFactory pageFactory = pageFactory;
 
-    public DocumentBuilder(Body body)
-    {
-        document = new Document();
-        document.AppendChild(body);
-    }
+    private WordprocessingDocument? document;
 
-    public void SaveTo(string path)
+    public void CreateDocumentWithTemplate(Core.Models.ProjectTree.Plc.Object plcItem, string templatePath, string path, bool clean = false)
     {
-        using (WordprocessingDocument package = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document))
+        File.Copy(templatePath, path);
+
+        if (clean)
         {
-            package.AddMainDocumentPart();
-            package.MainDocumentPart.Document = document;
-
-            StyleDefinitionsPart styleDefinitionsPart1 = package.MainDocumentPart.AddNewPart<StyleDefinitionsPart>("rId1");
-            GenerateStyleDefinitionsPart1Content(styleDefinitionsPart1);
-
-            package.MainDocumentPart.Document.Save();
+            CleanContents();
         }
     }
 
-    private void GenerateStyleDefinitionsPart1Content(StyleDefinitionsPart part)
+    public void CreateDocumentFromResource(string templateResource, bool clean = false)
     {
-        Styles doc_styles = GenerateDocumentStyles();
-        DocDefaults document_defaults = new DocDefaults();
-        RunPropertiesDefault defaultRunProperties = new RunPropertiesDefault(CreateRunBaseStyle());
-        document_defaults.Append(defaultRunProperties);
+        var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(templateResource);
+        stream ??= Assembly.GetCallingAssembly().GetManifestResourceStream(templateResource);
 
-        ParagraphPropertiesBaseStyle paragraphBaseStyle = new ParagraphPropertiesBaseStyle();
-        paragraphBaseStyle.Append(new SpacingBetweenLines()
+        if (stream is null)
         {
-            After = "200",
-            Line = "276",
-            LineRule = LineSpacingRuleValues.Auto
-        });
+            throw new FileNotFoundException($"Failed to load resource from {templateResource}");
+        }
 
-        ParagraphPropertiesDefault default_ParagraphProperties = new ParagraphPropertiesDefault();
-        default_ParagraphProperties.Append(paragraphBaseStyle);
-        document_defaults.Append(default_ParagraphProperties);
+        var ms = new MemoryStream();
+        stream.CopyTo(ms);
 
-        LatentStyles latentStyles1 = new LatentStyles()
+        document = WordprocessingDocument.Open(ms, true);
+
+        if (clean)
         {
-            DefaultLockedState = false,
-            DefaultUiPriority = 99,
-            DefaultSemiHidden = true,
-            DefaultUnhideWhenUsed = true,
-            DefaultPrimaryStyle = false,
-            Count = 267
-        };
+            CleanContents();
+        }
+    }
 
-        latentStyles1.Append(new LatentStyleExceptionInfo()
+    private void CleanContents()
+    {
+        if (document is null) return;
+
+        document.MainDocumentPart!.Document.Body!.RemoveAllChildren();
+        if (document.MainDocumentPart?.NumberingDefinitionsPart?.Numbering is not null)
         {
-            Name = "Normal",
-            UiPriority = 0,
-            SemiHidden = false,
-            UnhideWhenUsed = false,
-            PrimaryStyle = true
-        });
-        Style Normal = GenerateNormal();
+            document.MainDocumentPart.NumberingDefinitionsPart.Numbering.RemoveAllChildren<NumberingInstance>();
+        }
+    }
 
-        doc_styles.Append(document_defaults);
-        doc_styles.Append(latentStyles1);
-        doc_styles.Append(Normal);
-
-        for (int i = 1; i <= 7; i++)
+    public Task CreateDocument(List<Core.Models.ProjectTree.Object> projetItems, List<Core.Models.ProjectTree.Object> derivedItems, CultureInfo culture, string path)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        ThreadPool.QueueUserWorkItem(_ =>
         {
-            latentStyles1.Append(new LatentStyleExceptionInfo()
+            try
             {
-                Name = "Heading " + i,
-                UiPriority = 9,
-                SemiHidden = false,
-                UnhideWhenUsed = false,
-                PrimaryStyle = true
-            });
-            Style Header = GenerateHeader(i);
+                document = WordprocessingDocument.Create(path, DocumentFormat.OpenXml.WordprocessingDocumentType.Document);
+                MainDocumentPart mainDocumentPart = document.AddMainDocumentPart();
+                mainDocumentPart.Document = new Document();
 
-            doc_styles.Append(Header);
-        }
+                var styles = new DocumentStyles(settings);
+                StyleDefinitionsPart? styleDefinitionsPart = DocumentHelper.AddStylesPartToPackage(document, culture);
+                styleDefinitionsPart?.Styles?.Append(styles.SetDefault());
 
-        part.Styles = doc_styles;
-    }
+                NumberingDefinitionsPart numberingDefinitionsPart = DocumentHelper.AddNumberingDefinitionsPartToPackage(document, culture);
+                numberingDefinitionsPart.Numbering.SetDefault();
 
-    private RunPropertiesBaseStyle CreateRunBaseStyle()
-    {
-        RunPropertiesBaseStyle runBaseStyle = new RunPropertiesBaseStyle();
+                var body = mainDocumentPart.Document.AppendChild(new Body());
 
-        RunFonts font = new RunFonts();
-        font.Ascii = "Arial";
-        runBaseStyle.Append(font);
-        runBaseStyle.Append(new FontSize() { Val = "20" });
-        runBaseStyle.Append(new FontSizeComplexScript() { Val = "20" });
-        runBaseStyle.Append(new Languages()
-        {
-            Val = "en-GB",
-            EastAsia = "en-GB",
-            Bidi = "ar-SA"
+                //if (!string.IsNullOrEmpty(plcItem.Preamble?[culture]))
+                //    body.Append(new Paragraph(new Run(new Text(plcItem.Preamble![culture]!))));
+
+                body.Append(new Paragraph(new Run(new Text("Program blocks"))) 
+                {
+                    ParagraphProperties = new ParagraphProperties
+                    {
+                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
+                    }
+                });
+                foreach (var plcItem in projetItems.OfType<Core.Models.ProjectTree.Plc.Blocks.Object>())
+                {
+                    var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                    if (pageFactory.CreatePage(plcItem, derivedPLcItems)?.Build(culture) is DocumentFormat.OpenXml.OpenXmlElement[] page)
+                    {
+                        body.Append(page);
+                    }
+                }
+
+                body.Append(new Paragraph(new Run(new Text("PLC data types")))
+                {
+                    ParagraphProperties = new ParagraphProperties
+                    {
+                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
+                    }
+                });
+                foreach (var plcItem in projetItems.OfType<Core.Models.ProjectTree.Plc.Type>())
+                {
+                    var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                    if (pageFactory.CreatePage(plcItem, derivedPLcItems)?.Build(culture) is DocumentFormat.OpenXml.OpenXmlElement[] page)
+                    {
+                        body.Append(page);
+                    }
+                }
+
+
+                body.Append(new Paragraph(new Run(new Text("PLC tags & constants")))
+                {
+                    ParagraphProperties = new ParagraphProperties
+                    {
+                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
+                    }
+                });
+
+                //if (!string.IsNullOrEmpty(plcItem.Appendix?[culture]))
+                //    body.Append(new Paragraph(new Run(new Text(plcItem.Appendix![culture]!))));
+
+                body.Append(new Paragraph(new Run(new Text("Change log")))
+                {
+                    ParagraphProperties = new ParagraphProperties
+                    {
+                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading2].Name }
+                    }
+                });
+
+                tcs.SetResult(false);
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetException(ex);
+            }
         });
+        return tcs.Task;
 
-        return runBaseStyle;
     }
 
-    private Styles GenerateDocumentStyles()
+    private Paragraph? FindParagraphContainingText(string text)
     {
-        Styles doc_styles = new Styles() { MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = "w14" } };
-        doc_styles.AddNamespaceDeclaration("mc", "http://schemas.openxmlformats.org/markup-compatibility/2006");
-        doc_styles.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
-        doc_styles.AddNamespaceDeclaration("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
-        doc_styles.AddNamespaceDeclaration("w14", "http://schemas.microsoft.com/office/word/2010/wordml");
-        return doc_styles;
+        if (document?.MainDocumentPart is null || document.MainDocumentPart.Document.Body is null) return null;
+
+        var textElement = document.MainDocumentPart.Document.Body.Descendants<Text>().FirstOrDefault(t => t.Text.Contains(text));
+        if (textElement is null) return null;
+
+        return textElement.Ancestors<Paragraph>().FirstOrDefault();
     }
 
-    private Style GenerateNormal()
+    public void Save()
     {
-        Style Style_Normal = new Style()
+        if (document is not null)
         {
-            Type = StyleValues.Paragraph,
-            StyleId = "Normal",
-            Default = true
-        };
-        Style_Normal.Append(new StyleName() { Val = "Normal" });
-        Style_Normal.Append(new PrimaryStyle());
-
-        return Style_Normal;
+            document.Save();
+            document?.Dispose();
+        }
     }
 
-    private Style GenerateHeader(int id)
-    {
-        Style Style_Header1 = new Style() { Type = StyleValues.Paragraph, StyleId = "Heading" + id };
-
-        StyleParagraphProperties ParagraphProperties_Header = new StyleParagraphProperties();
-        ParagraphProperties_Header.Append(new KeepNext());
-        ParagraphProperties_Header.Append(new KeepLines());
-        ParagraphProperties_Header.Append(new SpacingBetweenLines() { Before = "480", After = "0" });
-        ParagraphProperties_Header.Append(new OutlineLevel() { Val = 0 });
-        Style_Header1.Append(ParagraphProperties_Header);
-
-        StyleRunProperties RunProperties_Header = new StyleRunProperties();
-        RunFonts font = new RunFonts();
-        font.Ascii = "Arial";
-        RunProperties_Header.Append(font);
-        RunProperties_Header.Append(new Bold());
-        RunProperties_Header.Append(new BoldComplexScript());
-        string size = (26 - id * 2).ToString();
-        RunProperties_Header.Append(new FontSize() { Val = size });
-        RunProperties_Header.Append(new FontSizeComplexScript() { Val = size });
-        Style_Header1.Append(RunProperties_Header);
-
-        Style_Header1.Append(new StyleName() { Val = "Heading " + id });
-        Style_Header1.Append(new BasedOn() { Val = "Normal" });
-        Style_Header1.Append(new NextParagraphStyle() { Val = "Normal" });
-        Style_Header1.Append(new LinkedStyle() { Val = "Heading" + id + "Char" });
-        Style_Header1.Append(new UIPriority() { Val = 9 });
-        Style_Header1.Append(new PrimaryStyle());
-        Style_Header1.Append(new Rsid() { Val = "00AF6F24" });
-
-        return Style_Header1;
-    }
-
+    
 }

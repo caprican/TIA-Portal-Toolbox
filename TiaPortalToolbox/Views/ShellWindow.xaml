@@ -134,6 +134,7 @@
                                                 <Grid.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Export" Command="{Binding DataContext.ExportItemCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=controls:MetroWindow}, UpdateSourceTrigger=PropertyChanged}" CommandParameter="{Binding}"/>
+                                                        <MenuItem Header="Build documents" Command="{Binding DataContext.BuildDocumentsCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=controls:MetroWindow}, UpdateSourceTrigger=PropertyChanged}" CommandParameter="{Binding}"/>
                                                     </ContextMenu>
                                                 </Grid.ContextMenu>
                                                 <Grid.ColumnDefinitions>

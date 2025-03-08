@@ -19,6 +19,8 @@ public class Connexion : ObservableObject
 
     public IEnumerable<Plc.Blocks.DataBlocks.DataBlock>? Blocks { get; }
 
+    internal List<Models.HmiDataBlockTag>? Tags { get; set; }
+
     public Connexion(Connection connection, Devices.Hmi hmiDevice, Devices.Plc plcDevice, IEnumerable<Plc.Blocks.DataBlocks.DataBlock>? block)
     {
         Name = connection.Name;

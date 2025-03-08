@@ -25,6 +25,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     private ICommand? loadedCommand;
     private ICommand? unloadedCommand;
     private ICommand? exportItemCommand;
+    private ICommand? buildDocumentsCommand;
     private bool paneOpen = false;
     private ObservableCollection<Core.Models.ProjectTree.Object>? projectTreeItems;
 
@@ -34,6 +35,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     public ICommand UnloadedCommand => unloadedCommand ??= new RelayCommand(OnUnloaded);
 
     public ICommand ExportItemCommand => exportItemCommand ??= new AsyncRelayCommand<Item>(OnExport);
+    public ICommand BuildDocumentsCommand => buildDocumentsCommand ??= new AsyncRelayCommand<Core.Models.ProjectTree.Object?>(OnBuildDocuments);
 
     public bool PaneOpen
     {
@@ -90,6 +92,22 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
 
         await opennessService.ExportAsync(item);
         
+        await progress.CloseAsync();
+    }
+
+    private async Task OnBuildDocuments(Core.Models.ProjectTree.Object? items)
+    {
+        if(items is null) return;
+
+
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        progress.SetIndeterminate();
+        
+
+
+
+
+
         await progress.CloseAsync();
     }
 }

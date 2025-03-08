@@ -16,12 +16,13 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Fluent.Ribbon" Version="10.1.0" />
     <PackageReference Include="MahApps.Metro" Version="3.0.0-alpha0513" />
-    <PackageReference Include="Markdig" Version="0.39.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Markdig" Version="0.40.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TiaPortalToolbox.Core\TiaPortalToolbox.Core.csproj" />
+    <ProjectReference Include="..\TiaPortalToolbox.Markdown\TiaPortalToolbox.Doc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

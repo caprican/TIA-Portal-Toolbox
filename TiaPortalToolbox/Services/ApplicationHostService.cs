@@ -8,21 +8,14 @@ namespace TiaPortalToolbox.Services;
 
 internal class ApplicationHostService(IServiceProvider serviceProvider, IEnumerable<Core.Contracts.Activation.IActivationHandler> activationHandlers,
                                       INavigationService navigationService,
-                                    //IRightPaneService rightPaneService, IProjectNavigatorService projectNavigatorService,
                                     IThemeSelectorService themeSelectorService,
-                                    ISettingsService settingsService, IPersistAndRestoreService persistAndRestoreService,
-
-                                    IOpennessService opennessService/*, IPlcProjectService plcProjectService*/) : IHostedService
+                                    ISettingsService settingsService, IPersistAndRestoreService persistAndRestoreService) : IHostedService
 {
     private readonly IServiceProvider serviceProvider = serviceProvider;
     private readonly INavigationService navigationService = navigationService;
     private readonly ISettingsService settingsService = settingsService;
     private readonly IPersistAndRestoreService persistAndRestoreService = persistAndRestoreService;
     private readonly IThemeSelectorService themeSelectorService = themeSelectorService;
-    //private readonly IRightPaneService rightPaneService = rightPaneService;
-    //private readonly IProjectNavigatorService projectNavigatorService = projectNavigatorService;
-
-    private readonly IOpennessService opennessService = opennessService;
 
     private readonly IEnumerable<Core.Contracts.Activation.IActivationHandler> activationHandlers = activationHandlers;
     private IShellWindow? shellWindow;

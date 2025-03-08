@@ -1,4 +1,6 @@
-﻿namespace TiaPortalToolbox.Core.Models;
+﻿using System.Globalization;
+
+namespace TiaPortalToolbox.Core.Models;
 
 public class InterfaceMember
 {
@@ -8,13 +10,15 @@ public class InterfaceMember
 
     public string? Type { get; set; }
 
-    //public string DerivedType { get; set; }
+    public string? DerivedType { get; set; } = null;
 
-    public string? Description { get; set; }
+    public Dictionary<CultureInfo, string>? Descriptions { get; set; }
 
     public string DefaultValue { get; set; } = string.Empty;
 
     public bool Islocked { get; set; } = false;
 
     public bool HidenInterface { get; set; } = false;
+
+    public List<InterfaceMember>? Members { get; set; } = null;
 }

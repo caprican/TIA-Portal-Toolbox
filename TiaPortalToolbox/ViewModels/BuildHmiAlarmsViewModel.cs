@@ -110,13 +110,11 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
     {
         var defaultAlarmsClass = "Alarm";
 
-        //Task.Run(() => { plcProjectService.BuildAlarms(Devices.Where(w => w.Selected == true).ToList(), defaultAlarmsClass, SimplifyTagname); });
-
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
         progress.SetIndeterminate();
 
-        //Connexions = await opennessService.GetCommunDataBlock(DataBlockMark);
-
+        await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
+        
         await progress.CloseAsync();
     }
 }

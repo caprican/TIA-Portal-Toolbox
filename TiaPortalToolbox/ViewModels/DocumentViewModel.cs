@@ -1,29 +1,28 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Windows.Media.Animation;
+using System.Windows.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
-
-using Markdig;
-
-using Microsoft.VisualBasic.Logging;
+using CommunityToolkit.Mvvm.Input;
 
 using TiaPortalToolbox.Contracts.ViewModels;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Core.Contracts.Services;
-using TiaPortalToolbox.Core.Models;
-using TiaPortalToolbox.Doc.Contracts.Services;
+using TiaPortalToolbox.Doc.Contracts.Builders;
 
 namespace TiaPortalToolbox.ViewModels;
 
 public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dialogCoordinator, IOpennessService opennessService,
-                               IPlcService plcService, IMarkdownService markdownService) : ObservableObject, INavigationAware
+                               IPlcService plcService, IDocumentBuilder documentBuilder) : ObservableObject, INavigationAware
 {
     private readonly IShellWindow shellWindow = shellWindow;
     private readonly IDialogCoordinator dialogCoordinator = dialogCoordinator;
     private readonly IOpennessService opennessService = opennessService;
     private readonly IPlcService plcService = plcService;
-    private readonly IMarkdownService markdownService = markdownService;
+    private readonly IDocumentBuilder documentBuilder = documentBuilder;
+
+    private ICommand? buildDocumentCommand;
+    private ICommand? loadDocumentCommand;
 
     private List<CultureInfo>? projectLangages;
     private CultureInfo? referenceLanguage;
@@ -39,6 +38,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     private string? description;
     private List<Core.Models.PlcBlockLog>? logs;
     private List<Core.Models.InterfaceMember>? interfaceMembers;
+    private ObservableCollection<Core.Models.ProjectTree.Plc.Object>? derivedTypes = null;
 
     public List<CultureInfo>? ProjectLangages
     {
@@ -64,11 +64,20 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         }
     }
 
+    public ICommand? BuildDocumentCommand => buildDocumentCommand ??= new AsyncRelayCommand(OnBuildDocument);
+    public ICommand? LoadDocumentCommand => loadDocumentCommand ??= new AsyncRelayCommand<Core.Models.ProjectTree.Object?>(OnLoadDocument);
+
     public Core.Models.ProjectTree.Plc.Object? PlcBlock
     {
         get => plcBlock;
         set => SetProperty(ref plcBlock, value);
     }
+    public ObservableCollection<Core.Models.ProjectTree.Plc.Object>? DerivedTypes
+    {
+        get => derivedTypes;
+        set => SetProperty(ref derivedTypes, value);
+    }
+
     public string? Title
     {
         get => title;
@@ -126,53 +135,89 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     {
         shellWindow.SelectedItemChanged += OnSelectedItemChanged;
 
+        if(parameter is Core.Models.ProjectTree.Object item)
+        {
+            OnSelectedItemChanged(this, item);
+        }
+
         ProjectLangages = opennessService.ProjectLanguages;
         EditingLanguage = opennessService.EditingLanguage;
         ReferenceLanguage = opennessService.ReferenceLanguage;
     }
 
-    private void OnSelectedItemChanged(object sender, Core.Models.ProjectTree.Object e)
+    private void OnSelectedItemChanged(object sender, Core.Models.ProjectTree.Object? e)
     {
-        Task.Run(async () =>
-        {
-            switch (e)
-            {
-                case Core.Models.ProjectTree.Plc.Object plcItem:
-                    await plcService.GetMetaDataBlockAsync(plcItem);
-
-                    PlcBlock = plcItem;
-
-                    Title = ReferenceLanguage is not null ? plcItem.Title?[ReferenceLanguage] : null;
-                    Author = ReferenceLanguage is not null ? plcItem.Author?[ReferenceLanguage] : null;
-                    Library = ReferenceLanguage is not null ? plcItem.Library?[ReferenceLanguage] : null;
-                    Family = ReferenceLanguage is not null ? plcItem.Family?[ReferenceLanguage] : null;
-
-                    ShortDescription = ReferenceLanguage is not null ? plcItem.Comment?[ReferenceLanguage] ?? plcItem.Function?[ReferenceLanguage] : null;
-                    
-                    Logs = ReferenceLanguage is not null ? plcItem.Logs?[ReferenceLanguage] : null;
-
-                    InterfaceMembers = ReferenceLanguage is not null ? plcItem.Members?[ReferenceLanguage] : null;
-
-                    Description = ReferenceLanguage is not null ? plcItem.Description?[ReferenceLanguage] : null;
-
-
-
-                    var pipeline = new MarkdownPipelineBuilder()
-                                            .UseAdvancedExtensions()
-                                            .UseFigures()
-                                            .Build();
-                    var document = Markdig.Markdown.Parse(Description, pipeline);
-
-                    markdownService.CreateDocX(document, "");
-
-                    break;
-            }
-        });
+        LoadDocumentCommand?.Execute(e);
     }
-
 
     public void LoadCompleted()
     {
 
+    }
+
+    private async Task OnLoadDocument(Core.Models.ProjectTree.Object? e)
+    {
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        progress.SetIndeterminate();
+
+        switch (e)
+        {
+            case Core.Models.ProjectTree.Plc.Object plcItem:
+                await plcService.GetMetaDataBlockAsync(plcItem);
+                PlcBlock = plcItem;
+
+                if(PlcBlock?.Members?.First() is not null)
+                {
+                    foreach (var member in PlcBlock.Members.First().Value.Where(w => !string.IsNullOrEmpty(w.DerivedType)))
+                    {
+                        if(!string.IsNullOrEmpty(member.DerivedType))
+                        {
+                            var derivedType = await plcService.GetItem(member.DerivedType!);
+                            if(derivedType is not null)
+                            { 
+                                await plcService.GetMetaDataBlockAsync(derivedType);
+                                DerivedTypes ??= [];
+                                DerivedTypes.Add(derivedType);
+                            }
+
+                        }
+                    }
+                }
+
+                Title = ReferenceLanguage is not null ? plcItem.Title?[ReferenceLanguage] : null;
+                Author = ReferenceLanguage is not null ? plcItem.Author?[ReferenceLanguage] : null;
+                Library = ReferenceLanguage is not null ? plcItem.Library?[ReferenceLanguage] : null;
+                Family = ReferenceLanguage is not null ? plcItem.Family?[ReferenceLanguage] : null;
+
+                ShortDescription = ReferenceLanguage is not null ? plcItem.Comment?[ReferenceLanguage] ?? plcItem.Function?[ReferenceLanguage] : null;
+                    
+                Logs = ReferenceLanguage is not null ? plcItem.Logs?[ReferenceLanguage] : null;
+
+                InterfaceMembers = ReferenceLanguage is not null ? plcItem.Members?[ReferenceLanguage] : null;
+
+                Description = ReferenceLanguage is not null ? plcItem.Descriptions?[ReferenceLanguage] : null;
+
+                break;
+        }
+
+        await progress.CloseAsync();
+
+    }
+
+    private async Task OnBuildDocument()
+    {
+        var projectName = $"SKF libraries {PlcBlock?.Name}";
+
+        List<Core.Models.ProjectTree.Object> projectItems = [PlcBlock];
+        projectItems.AddRange(DerivedTypes);
+        List<Core.Models.ProjectTree.Object> derivedTypes = [];
+        derivedTypes.AddRange(DerivedTypes);
+
+        if(ReferenceLanguage is null) return;
+
+        await documentBuilder.CreateDocument(projectItems, derivedTypes, ReferenceLanguage, @$"C:/Users/capri/Downloads/{projectName}_{ReferenceLanguage.Name}.docx");
+        documentBuilder.Save();
+
+        await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, "Document created", "The document has been created successfully");
     }
 }

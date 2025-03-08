@@ -13,7 +13,9 @@ namespace TiaPortalToolbox.Views;
 
 public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 {
-    public RibbonTitleBar TitleBar
+    private Core.Models.ProjectTree.Object? selectedItem;
+
+    public RibbonTitleBar? TitleBar
     {
         get => (RibbonTitleBar)GetValue(TitleBarProperty);
         private set => SetValue(TitleBarPropertyKey, value);
@@ -23,7 +25,9 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 
     public static readonly DependencyProperty TitleBarProperty = TitleBarPropertyKey.DependencyProperty;
 
-    public event EventHandler<Core.Models.ProjectTree.Object>? SelectedItemChanged;
+    public event EventHandler<Core.Models.ProjectTree.Object?>? SelectedItemChanged;
+
+    public Core.Models.ProjectTree.Object? SelectedItem => selectedItem;
 
     public ShellWindow(IPageService pageService, ShellViewModel viewModel, INavigationService navigationService)
     {
@@ -60,6 +64,14 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if(e.NewValue is Core.Models.ProjectTree.Object item)
-        SelectedItemChanged?.Invoke(this, item);
+        {
+            selectedItem = item;
+            SelectedItemChanged?.Invoke(this, item);
+        }
+        else
+        {
+            selectedItem = null;
+            SelectedItemChanged?.Invoke(this, null);
+        }
     }
 }

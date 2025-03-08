@@ -11,8 +11,8 @@ using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Core.Services;
-using TiaPortalToolbox.Doc.Contracts.Services;
-using TiaPortalToolbox.Doc.Services;
+using TiaPortalToolbox.Doc.Builders;
+using TiaPortalToolbox.Doc.Contracts.Builders;
 using TiaPortalToolbox.Models;
 using TiaPortalToolbox.Services;
 using TiaPortalToolbox.ViewModels;
@@ -65,8 +65,6 @@ public partial class App : Application
         // Core Services
         services.AddSingleton<IFileService, FileService>();
 
-        services.AddTransient<IMarkdownService, MarkdownService>();
-
         // Services
         services.AddSingleton<IWindowManagerService, WindowManagerService>();
         services.AddSingleton<IApplicationInfoService, ApplicationInfoService>();
@@ -113,6 +111,10 @@ public partial class App : Application
         services.AddTransient<IPlcService, PlcService>();
         services.AddTransient<IHmiService, HmiService>();
         services.AddTransient<IUnifiedService, UnifiedService>();
+
+        services.AddTransient<IDocumentBuilder, DocumentBuilder>();
+        services.AddTransient<Doc.Contracts.Factories.IPageFactory, Doc.Factories.PageFactory>();
+
     }
 
     private async void OnExit(object sender, ExitEventArgs e)

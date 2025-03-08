@@ -1,16 +1,9 @@
-﻿using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW;
-
-using TiaPortalToolbox.Core.Contracts.Services;
+﻿using TiaPortalToolbox.Core.Contracts.Services;
 using System.Xml.Serialization;
 using System.Globalization;
 using SimaticML.SW.Common;
 using SimaticML.SW.InterfaceSections;
 using System.Text.RegularExpressions;
-using TiaPortalToolbox.Core.Models;
-using System.Collections.Generic;
-using System.Linq;
-using Siemens.Engineering;
 
 namespace TiaPortalToolbox.Core.Services;
 
@@ -25,118 +18,156 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         {
             foreach (var fileName in fileNames)
             {
-                try
+                GetMetaDataBlock(fileName, plcItem);
+            }
+        }
+    }
+
+    public Models.ProjectTree.Plc.Object GetMetaDataBlock(string fileName, Models.ProjectTree.Plc.Object? plcItem = null)
+    {
+        var serializer = new XmlSerializer(typeof(SimaticML.Document));
+        var myFile = new FileStream(fileName, FileMode.Open);
+        if (serializer.Deserialize(myFile) is SimaticML.Document document)
+        {
+            foreach (var item in document)
+            {
+                plcItem ??= item switch
                 {
-                    var attrOverrides = new XmlAttributeOverrides();
-                    var attrs = new XmlAttributes();
+                    SimaticML.SW.Blocks.FC fc => new Models.ProjectTree.Plc.Blocks.Fc(null, ""),
+                    SimaticML.SW.Blocks.FB fb => new Models.ProjectTree.Plc.Blocks.Fb(null, ""),
+                    SimaticML.SW.Blocks.GlobalDB globalDb => new Models.ProjectTree.Plc.Blocks.DataBlocks.GlobalData(null, ""),
+                    SimaticML.SW.Blocks.ArrayDB arrayDb => new Models.ProjectTree.Plc.Blocks.DataBlocks.ArrayDb(null, ""),
+                    SimaticML.SW.Types.PlcStruct plcStruct => new Models.ProjectTree.Plc.Type(null, ""),
+                    _ => new Models.ProjectTree.Plc.Item(null, ""),
+                };
 
-                    var attr = new XmlElementAttribute();
-                    attr.Type = typeof(Comment_T_v2);
-                    attrs.XmlElements.Add(attr);
-
-                    attrOverrides.Add(typeof(Member_T_v5), attrs);
-
-
-                    var serializer = new XmlSerializer(typeof(SimaticML.Document), attrOverrides);
-                var myFile = new FileStream(fileName, FileMode.Open);
-                if (serializer.Deserialize(myFile) is SimaticML.Document document)
+                foreach (var multilingualText in item.OfType<SimaticML.MultilingualText_T>().FirstOrDefault().OfType<SimaticML.MultilingualTextItem_T>())
                 {
-                    //foreach (var item in document.Items)
-                    //{
-                    //    foreach (var multilingualText in item.ObjectList.OfType<SimaticML.MultilingualText_T>().FirstOrDefault().ObjectList.OfType<SimaticML.MultilingualTextItem_T>())
-                    //    {
-                    //        plcItem.Languages ??= [];
-                    //        var culture = CultureInfo.GetCultureInfo(multilingualText.AttributeList.Culture);
-                    //        if (!plcItem.Languages.Contains(culture))
-                    //        {
-                    //            plcItem.Languages.Add(culture);
-                    //        }
-                    //    }
-
-                    //    //((Models.ProjectTree.Plc.Blocks.Object)plcItem).Members = item switch
-                    //    //{
-                    //    //    SimaticML.SW.Blocks.FC fc => GetInterfaceMembers(fc.AttributeList.Interface.Sections, plcItem.Languages),
-                    //    //    SimaticML.SW.Blocks.FB fb => GetInterfaceMembers(fb.AttributeList.Interface.Sections, plcItem.Languages),
-                    //    //    _ => null,
-                    //    //};
-
-                    //    //var compileUnits = item switch
-                    //    //{
-                    //    //    SimaticML.SW.Blocks.FC fc => GetCompileUnits(fc.ObjectList.OfType<SimaticML.SW.Blocks.CompileUnit>(), plcItem.Languages),
-                    //    //    SimaticML.SW.Blocks.FB fb => GetCompileUnits(fb.ObjectList.OfType<SimaticML.SW.Blocks.CompileUnit>(), plcItem.Languages),
-                    //    //    _ => null,
-                    //    //};
-
-
-                    //    //if (compileUnits?.Count > 0)
-                    //    //{
-                    //    //    foreach (var compileUnit in compileUnits)
-                    //    //    {
-                    //    //        if (compileUnit[PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("BLOCK INFO HEADER", StringComparison.InvariantCultureIgnoreCase)))
-                    //    //        {
-                    //    //            GetNetworkHeader(compileUnit[PlcNetworkCommentType.Comment], plcItem);
-                    //    //        }
-                    //    //        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("DESCRIPTION", StringComparison.InvariantCultureIgnoreCase)))
-                    //    //        {
-                    //    //            ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Description = compileUnit[PlcNetworkCommentType.Comment];
-                    //    //        }
-                    //    //    }
-                    //    //}
-
-
-                    //}
+                    plcItem.Languages ??= [];
+                    var culture = CultureInfo.GetCultureInfo(multilingualText.Culture);
+                    if (!plcItem.Languages.Contains(culture))
+                    {
+                        plcItem.Languages.Add(culture);
+                    }
                 }
 
+                switch(plcItem)
+                {
+                    case Models.ProjectTree.Plc.Blocks.Object block:
+                        block.Members = item switch
+                        {
+                            SimaticML.SW.Blocks.FC fc => GetInterfaceMembers(fc.Attributes.Interface, plcItem.Languages),
+                            SimaticML.SW.Blocks.FB fb => ((Func<Dictionary<CultureInfo, List<Models.InterfaceMember>>>) (() =>
+                            {
+                                Dictionary<CultureInfo, List<Models.InterfaceMember>>? members = [];
+                                var interfaceMembers = GetInterfaceMembers(fb.Attributes.Interface, plcItem.Languages);
+                                if (interfaceMembers is not null)
+                                {
+                                    members.AddRange(interfaceMembers);
+                                }
+
+                                var staticMembers = GetMembers(fb.Attributes.Interface, plcItem.Languages);
+                                if(staticMembers is not null)
+                                {
+                                    foreach (var item in staticMembers)
+                                    {
+                                        members[item.Key].AddRange(item.Value);
+                                    }
+                                }
+
+                                return members;
+                            }))(),
+                            SimaticML.SW.Blocks.GlobalDB globalDb => GetMembers(globalDb.Attributes.Interface, plcItem.Languages),
+                            SimaticML.SW.Blocks.ArrayDB arrayDb => GetMembers(arrayDb.Attributes.Interface, plcItem.Languages),
+                            _ => null,
+                        };
+                        break;
+                    case Models.ProjectTree.Plc.Type type:
+                        type.Members = item switch
+                        {
+                            SimaticML.SW.Types.PlcStruct plcStruct => GetMembers(plcStruct.Attributes.Interface, plcItem.Languages),
+                            _ => null,
+                        };
+                        break;
                 }
-                catch 
-                { 
+
+
+                var programmingLanguage = item switch
+                {
+                    SimaticML.SW.Blocks.FC fc => fc.Attributes.ProgrammingLanguage,
+                    SimaticML.SW.Blocks.FB fb => fb.Attributes.ProgrammingLanguage,
+
+                    SimaticML.SW.Blocks.GlobalDB globalDb => globalDb.Attributes.ProgrammingLanguage,
+                    SimaticML.SW.Blocks.ArrayDB arrayDb => arrayDb.Attributes.ProgrammingLanguage,
+                    _ => null,
+                };
+
+                var compileUnits = item switch
+                {
+                    SimaticML.SW.Blocks.FC fc => GetCompileUnits(fc.OfType<SimaticML.SW.Blocks.CompileUnit>(), programmingLanguage, plcItem.Languages),
+                    SimaticML.SW.Blocks.FB fb => GetCompileUnits(fb.OfType<SimaticML.SW.Blocks.CompileUnit>(), programmingLanguage, plcItem.Languages),
+                    _ => null,
+                };
+
+                if (compileUnits?.Count > 0)
+                {
+                    foreach (var compileUnit in compileUnits)
+                    {
+                        if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("BLOCK INFO HEADER", StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            GetNetworkHeader(compileUnit[Core.Models.PlcNetworkCommentType.Comment], plcItem);
+                        }
+                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("PREAMBLE", StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Preamble = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
+                        }
+                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("DESCRIPTION", StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Descriptions = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
+                        }
+                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("APPENDIX", StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Appendix = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
+                        }
+                    }
                 }
             }
         }
 
+        return plcItem;
     }
 
+    public async Task<Models.ProjectTree.Plc.Object?> GetItem(string name) => await opennessService.GetItem(name) as Models.ProjectTree.Plc.Object;
 
-    internal Dictionary<CultureInfo, List<InterfaceMember>>? GetInterfaceMembers(Section_T[] sections, IEnumerable<CultureInfo> languages)
+
+    internal Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? GetInterfaceMembers(SimaticML.SW.Interface_T @interface, IEnumerable<CultureInfo>? languages)
     {
-        Dictionary<CultureInfo, List<InterfaceMember>>? cultureMembers = null;
+        Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? cultureMembers = null;
+
+        if(languages is null) return null;
+
         foreach (var language in languages)
         {
-            List<InterfaceMember>? members = null;
-            //foreach (var section in sections.Where(s => s.Name == SectionName_TE.Input ||
-            //                                            s.Name == SectionName_TE.Output ||
-            //                                            s.Name == SectionName_TE.Input))
-            //{
-            //    if (section.Member is not null)
-            //    {
-            //        foreach (var member in section.Member)
-            //        {
-            //            members ??= [];
-            //            members.Add(new InterfaceMember
-            //            {
-            //                Name = member.Name,
-            //                Direction = section.Name switch
-            //                {
-            //                    SectionName_TE.Input => DirectionMember.Input,
-            //                    SectionName_TE.InOut => DirectionMember.InOutput,
-            //                    SectionName_TE.Output => DirectionMember.Output,
-            //                    SectionName_TE.Return => DirectionMember.Return,
-            //                    SectionName_TE.Static => DirectionMember.Static,
-            //                    _ => DirectionMember.Other
-            //                },
-            //                Type = GetMemberType(member.Datatype),
-            //                //DerivedType = GetDerivedType(member.de),
-            //                Description = GetMemberComment(member.Items.OfType<Comment_T>(), language),
-            //                Islocked = section.Name == SectionName_TE.Return,
-            //                DefaultValue = GetMemberStartValue(member.Items.OfType<StartValue_T>()),
-            //                HidenInterface = member.AttributeList?.Any(attr => attr is StringAttribute_T hiddenAssign && hiddenAssign.Name == "S7_HiddenAssignment" && hiddenAssign.Value == "Hide") == true
-            //            });
+            List<Core.Models.InterfaceMember>? members = null;
+            foreach (var sections in @interface)
+            {
+                foreach (var section in sections.Where(s => s.Name == SectionName_TE.Input ||
+                                                            s.Name == SectionName_TE.Output ||
+                                                            s.Name == SectionName_TE.InOut))
+                {
+                    if (section.Members is not null)
+                    {
+                        foreach (var member in section.Members)
+                        {
+                            members ??= [];
+                            members.Add(GetMember(section.Name, member));
 
-            //        }
-            //    }
-            //}
+                        }
+                    }
+                }
+            }
 
-            if(members?.Count > 0)
+            if (members?.Count > 0)
             {
                 cultureMembers ??= [];
                 cultureMembers.Add(language, members);
@@ -146,7 +177,76 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return cultureMembers;
     }
 
-    private string GetMemberType(string memberType)
+    internal Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? GetMembers(SimaticML.SW.Interface_T @interface, IEnumerable<CultureInfo>? languages)
+    {
+        Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? cultureMembers = null;
+
+        if (languages is null) return null;
+
+        foreach (var language in languages)
+        {
+            List<Core.Models.InterfaceMember>? members = null;
+            foreach (var sections in @interface)
+            {
+                foreach (var section in sections.Where(s => s.Name == SectionName_TE.Static || s.Name == SectionName_TE.None))
+                {
+                    if (section.Members is not null)
+                    {
+                        foreach (var member in section.Members)
+                        {
+                            members ??= [];
+                            members.Add(GetMember(section.Name, member));
+                        }
+                    }
+                }
+            }
+
+            if (members?.Count > 0)
+            {
+                cultureMembers ??= [];
+                cultureMembers.Add(language, members);
+            }
+        }
+
+        return cultureMembers;
+    }
+
+    private Core.Models.InterfaceMember GetMember(SectionName_TE sectionName, IMember_T member)
+    {
+        var result = new Core.Models.InterfaceMember
+        {
+            Name = member.Name,
+            Direction = sectionName switch
+            {
+                SectionName_TE.Input => Core.Models.DirectionMember.Input,
+                SectionName_TE.InOut => Core.Models.DirectionMember.InOutput,
+                SectionName_TE.Output => Core.Models.DirectionMember.Output,
+                SectionName_TE.Return => Core.Models.DirectionMember.Return,
+                SectionName_TE.Static => Core.Models.DirectionMember.Static,
+                _ => Core.Models.DirectionMember.Other
+            },
+            Type = GetMemberType(member.Datatype),
+            DerivedType = GetDerivedType(member.Datatype),
+            Descriptions = GetMemberComment(member.Comment),
+            Islocked = sectionName == SectionName_TE.Return,
+            DefaultValue = GetMemberStartValue(member.OfType<StartValue_T>()),
+            HidenInterface = member.Attributes?.Any(attr => attr is StringAttribute_T hiddenAssign && hiddenAssign.Name == "S7_HiddenAssignment" && hiddenAssign.Value == "Hide") == true
+        };
+
+        if (member.Count() > 0)
+        {
+            foreach(IMember_T child in member.OfType<Member_T>())
+            {
+                result.Members ??= [];
+                result.Members.Add(GetMember(sectionName, child));
+            }
+        }
+
+        return result;
+    }
+
+
+    private string? GetMemberType(string memberType)
     {
         if (Regex.Match(memberType, @"(.*?) of ""(.*?)""") is Match arrayMatch && arrayMatch.Success)
         {
@@ -162,51 +262,38 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         }
     }
 
-    //private string GetDerivedType(string memberType)
-    //{
-    //    if (Regex.Match(memberType, @"(.*?) of ""(.*?)""") is Match arrayMatch && arrayMatch.Success)
-    //    {
-    //        return arrayMatch.Groups[2].Value;
-    //    }
-    //    else if (Regex.Match(memberType, @"""(.*?)""") is Match udtMatch && udtMatch.Success)
-    //    {
-    //        return udtMatch.Groups[1].Value;
-    //    }
-    //    else
-    //    {
-    //        return string.Empty;
-    //    }
-    //}
-
-    private Dictionary<string, string> GetMemberComment(IEnumerable<Comment_T> comments)
+    private string? GetDerivedType(string memberType)
     {
-        var description = new Dictionary<string, string>();
-        //if (comments is not null)
-        //{
-        //    foreach (var comment in comments)
-        //    {
-        //        if (comment.MultiLanguageText is not null)
-        //        {
-        //            foreach (var text in comment.MultiLanguageText)
-        //            {
-        //                description.Add(text.Lang, text.Value);
-        //            }
-        //        }
-        //    }
-        //}
-        return description;
+        if (Regex.Match(memberType, @"(.*?) of ""(.*?)""") is Match arrayMatch && arrayMatch.Success)
+        {
+            return arrayMatch.Groups[2].Value;
+        }
+        else if (Regex.Match(memberType, @"""(.*?)""") is Match udtMatch && udtMatch.Success)
+        {
+            return udtMatch.Groups[1].Value;
+        }
+        else
+        {
+            return null;
+        }
     }
 
-    private string? GetMemberComment(IEnumerable<Comment_T> comments, CultureInfo language)
+    private string? GetMemberComment(IComment_T comments, CultureInfo language) =>
+        comments?.SingleOrDefault(s => s.Lang == language.Name)?.Value;
+
+    private Dictionary<CultureInfo, string>? GetMemberComment(IComment_T? comments)
     {
-        //if (comments?.Count() > 0)
-        //{
-        //    foreach (var comment in comments)
-        //    {
-        //        return comment.MultiLanguageText?.SingleOrDefault(s => s.Lang == language.Name)?.Value;
-        //    }
-        //}
-        return null;
+        var result = new Dictionary<CultureInfo, string>();
+
+        if(comments is not null)
+        {
+            foreach (var comment in comments)
+            {
+                result.Add(CultureInfo.GetCultureInfo(comment.Lang), comment.Value);
+            }
+        }
+
+        return result.Count > 0 ? result : null;
     }
 
     private string GetMemberStartValue(IEnumerable<StartValue_T> startValues)
@@ -219,44 +306,56 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return string.Empty;
     }
 
-    private List<Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>>> GetCompileUnits(IEnumerable<SimaticML.SW.Blocks.CompileUnit> compileUnits, List<CultureInfo>? languages)
+    private List<Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>>> GetCompileUnits(IEnumerable<SimaticML.SW.Blocks.CompileUnit> compileUnits, SimaticML.ProgrammingLanguage_TE? programmingLanguage, List<CultureInfo>? languages)
     {
-        List<Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>>> results = [];
-        //foreach (var compileUnit in compileUnits)
-        //{
-        //    switch (compileUnit.AttributeList.ProgrammingLanguage)
-        //    {
-        //        case SimaticML.ProgrammingLanguage_TE.SCL:
-        //            foreach (var region in StructuredTextRegions(compileUnit.AttributeList.NetworkSource))
-        //            {
-        //                results.Add(NetworkComment(region, languages));
-        //            }
+        List<Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>>> results = [];
+        foreach (var compileUnit in compileUnits)
+        {
+            switch (compileUnit.Attributes.ProgrammingLanguage)
+            {
+                case SimaticML.ProgrammingLanguage_TE.SCL:
 
-        //            break;
-        //        case SimaticML.ProgrammingLanguage_TE.STL:
-        //        case SimaticML.ProgrammingLanguage_TE.LAD:
-        //        case SimaticML.ProgrammingLanguage_TE.FBD:
-        //        case SimaticML.ProgrammingLanguage_TE.F_FBD:
-        //        case SimaticML.ProgrammingLanguage_TE.F_LAD:
-        //            results.Add(NetworkComment(compileUnit.ObjectList.OfType<SimaticML.MultilingualText_T>()));
-        //            break;
-        //    }
-        //}
+                    var comments = NetworkComment(compileUnit.OfType<SimaticML.MultilingualText_T>());
+                    
+                    foreach (var region in StructuredTextRegions(compileUnit.Attributes.NetworkSource))
+                    {
+                        var networks = NetworkComment(region, languages);
+
+                        if (comments?.TryGetValue(Core.Models.PlcNetworkCommentType.Title, out var title) == true && networks.ContainsKey(Core.Models.PlcNetworkCommentType.Title))
+                        {
+                            if (networks[Core.Models.PlcNetworkCommentType.Title].All(a => string.IsNullOrEmpty(a.Value)) == true)
+                            {
+                                networks[Core.Models.PlcNetworkCommentType.Title] = title;
+                            }
+                            
+                        }
+                        results.Add(networks);
+                    }
+
+                    break;
+                case SimaticML.ProgrammingLanguage_TE.STL:
+                case SimaticML.ProgrammingLanguage_TE.LAD:
+                case SimaticML.ProgrammingLanguage_TE.FBD:
+                case SimaticML.ProgrammingLanguage_TE.F_FBD:
+                case SimaticML.ProgrammingLanguage_TE.F_LAD:
+                    results.Add(NetworkComment(compileUnit.OfType<SimaticML.MultilingualText_T>()));
+                    break;
+            }
+        }
 
         return results;
     }
 
-    private List<List<object>> StructuredTextRegions(SimaticML.NetworkSource_T networkSource)
+    private List<List<SimaticML.SW.Object_G>> StructuredTextRegions(SimaticML.NetworkSource_T networkSource)
     {
-        List<List<object>> regions = [];
-        var structuredTexts = networkSource.StructuredText?.ToList();
-        if (structuredTexts is not null)
+        List<List<SimaticML.SW.Object_G>> regions = [];
+        if (networkSource is not null)
         {
-            foreach (var structuredText in structuredTexts)
+            foreach (var structuredText in networkSource)
             {
-                var SclItems = structuredText.Items.ToList();
+                var SclItems = structuredText.ToList();
                 var regionTags = SclItems.FindAll(item => item is Token_T token && (token.Text == "REGION" || token.Text == "END_REGION"));
-                if(regionTags?.Count > 0)
+                if (regionTags?.Count > 0)
                 {
                     for (var i = 0; i < regionTags.Count; i += 2)
                     {
@@ -271,7 +370,7 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                         }
                     }
                 }
-                else if(regionTags is not null)
+                else if (regionTags is not null)
                 {
                     if (SclItems.Any(item => item is Text_T || item is LineComment_T || item is Comment_T))
                     {
@@ -284,23 +383,23 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return regions;
     }
 
-    private Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>> NetworkComment(IEnumerable<SimaticML.MultilingualText_T> multilingualTexts)
+    private Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>> NetworkComment(IEnumerable<SimaticML.MultilingualText_T> multilingualTexts)
     {
-        var dictionaryTexts = new Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>>();
+        var dictionaryTexts = new Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>>();
         foreach (var multilingualText in multilingualTexts)
         {
             var texts = new Dictionary<CultureInfo, string>();
-            foreach (var multilingualTextItem in multilingualText.ObjectList.OfType<SimaticML.MultilingualTextItem_T>().Where(item => item.CompositionName == "Items"))
+            foreach (var multilingualTextItem in multilingualText.OfType<SimaticML.MultilingualTextItem_T>().Where(item => item.CompositionName == "Items"))
             {
-                texts.Add(CultureInfo.GetCultureInfo(multilingualTextItem.AttributeList.Culture), multilingualTextItem.AttributeList.Text);
+                texts.Add(CultureInfo.GetCultureInfo(multilingualTextItem.Culture), multilingualTextItem.Text);
             }
             switch (multilingualText.CompositionName)
             {
                 case "Title":
-                    dictionaryTexts.Add(PlcNetworkCommentType.Title, texts);
+                    dictionaryTexts.Add(Core.Models.PlcNetworkCommentType.Title, texts);
                     break;
                 case "Comment":
-                    dictionaryTexts.Add(PlcNetworkCommentType.Comment, texts);
+                    dictionaryTexts.Add(Core.Models.PlcNetworkCommentType.Comment, texts);
                     break;
             }
         }
@@ -308,7 +407,7 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return dictionaryTexts;
     }
 
-    private Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>> NetworkComment(List<object> region, List<CultureInfo>? languages)
+    private Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>> NetworkComment(List<SimaticML.SW.Object_G> region, List<CultureInfo>? languages)
     {
         var indexTitle = region.FindIndex(r => r is NewLine_T);
         var titleContent = region.Take(indexTitle);
@@ -323,9 +422,9 @@ public class PlcService(IOpennessService opennessService) : IPlcService
             }
         }
 
-        var dictionaryTexts = new Dictionary<PlcNetworkCommentType, Dictionary<CultureInfo, string>>
+        var dictionaryTexts = new Dictionary<Core.Models.PlcNetworkCommentType, Dictionary<CultureInfo, string>>
         {
-            { PlcNetworkCommentType.Title, texts }
+            { Core.Models.PlcNetworkCommentType.Title, texts }
         };
 
         texts = [];
@@ -342,23 +441,23 @@ public class PlcService(IOpennessService opennessService) : IPlcService
             {
                 switch (itemRegion)
                 {
-                    case LineComment_T lineComment:
-                        languages?.ForEach(culture => texts[culture] += string.Join(" ", lineComment.Items.OfType<Text_T>().Select(s => s.Value)));
+                    case ILineComment_T lineComment:
+                        languages?.ForEach(culture => texts[culture] += string.Join(" ", lineComment.OfType<Text_T>().Select(s => s.Value)));
                         break;
                     case NewLine_T:
                         languages?.ForEach(culture => texts[culture] += "\r\n");
                         break;
-                    case Comment_T comment:
-                        //foreach (var multiLanguageText in comment.MultiLanguageText)
-                        //{
-                        //    texts[CultureInfo.GetCultureInfo(multiLanguageText.Lang)] += multiLanguageText.Value;
-                        //}
+                    case IComment_T comment:
+                        foreach (var multiLanguageText in comment)
+                        {
+                            texts[CultureInfo.GetCultureInfo(multiLanguageText.Lang)] += multiLanguageText.Value;
+                        }
                         break;
                 }
             }
         }
 
-        dictionaryTexts.Add(PlcNetworkCommentType.Comment, texts);
+        dictionaryTexts.Add(Core.Models.PlcNetworkCommentType.Comment, texts);
 
         return dictionaryTexts;
     }

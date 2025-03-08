@@ -2,8 +2,8 @@
 
 namespace TiaPortalToolbox.Core.Models.ProjectTree.Plc.Blocks;
 
-public class Fc(FC Block, string? Path) : Blocks.Object(Block, Path)
+public class Fc(FC? Block, string? Path) : Blocks.Object(Block, Path)
 {
-    public override string? DisplayName => $"{Block.Name} [FC{Block.Number}]";
+    public override string? DisplayName => $"{Block?.Name ?? string.Empty} [FC{Block?.Number}]";
 
 }

@@ -8,10 +8,10 @@ namespace TiaPortalToolbox.Core.Models.ProjectTree.Devices;
 public class Unified : Devices.Object
 {
     internal HmiSoftware Device;
-    public new ObservableCollection<ProjectTree.Unified.Item>? Items =>
-    [
-        //new ProjectTree.Unified.Item("HMI Tags", Path) { Items = Tags }
-    ];
+    //public new ObservableCollection<ProjectTree.Unified.Item>? Items =>
+    //[
+    //    //new ProjectTree.Unified.Item("HMI Tags", Path) { Items = Tags }
+    //];
 
     public ObservableCollection<ProjectTree.Unified.Object>? Tags { get; set; }//=> Items.SingleOrDefault(s => s.Name == "HMI Tags")?.Items;
 
@@ -48,7 +48,7 @@ public class Unified : Devices.Object
             var groupPath = parentPath;
             do
             {
-                ObservableCollection<ProjectTree.Unified.Object>? groupItems = null;
+                ObservableCollection<ProjectTree.Object>? groupItems = null;
                 if (GetUnifiedTags(tagGroup[0].TagTables, System.IO.Path.Combine(groupPath, tagGroup[0].Name)) is List<ProjectTree.Unified.TagTable> blocks)
                 {
                     groupItems ??= [];
@@ -65,7 +65,7 @@ public class Unified : Devices.Object
                 if (groupItems is not null)
                 {
                     groups ??= [];
-                    groups.Add(new ProjectTree.Unified.Item(tagGroup[0].Name, System.IO.Path.Combine(groupPath, tagGroup[0].Name))
+                    groups.Add(new ProjectTree.Unified.Folder(tagGroup[0].Name, System.IO.Path.Combine(groupPath, tagGroup[0].Name))
                     {
                         Items = groupItems
                     });
@@ -85,7 +85,13 @@ public class Unified : Devices.Object
             foreach (var tag in plcTags)
             {
                 tags ??= [];
-                tags.Add(new ProjectTree.Unified.TagTable(tag, parentPath));
+                switch(tag)
+                {
+                    case HmiTagTable table:
+                        tags.Add(new ProjectTree.Unified.TagTable(table, parentPath));
+                        break;
+                }
+
             }
         }
         return tags;

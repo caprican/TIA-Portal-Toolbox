@@ -14,7 +14,13 @@ public abstract class Object(string Name, string? Path) : ProjectTree.Object(Nam
     public Dictionary<CultureInfo, string>? Function { get; set; }
     public Dictionary<CultureInfo, string>? Library { get; set; }
     public Dictionary<CultureInfo, string>? Family { get; set; }
-    public Dictionary<CultureInfo, string>? Description { get; set; }
+    public Dictionary<CultureInfo, string>? Preamble { get; set; }
+    public Dictionary<CultureInfo, string>? Descriptions { get; set; }
+    public Dictionary<CultureInfo, string>? Appendix { get; set; }
+
+    public bool IsSafetyBlock { get; set; } = false;
+
+    public string? Version { get; set; } = null;
 
     public Dictionary<CultureInfo, List<InterfaceMember>>? Members { get; set; }
 
