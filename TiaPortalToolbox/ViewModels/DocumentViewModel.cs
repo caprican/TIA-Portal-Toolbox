@@ -209,9 +209,12 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         var projectName = $"SKF libraries {PlcBlock?.Name}";
 
         List<Core.Models.ProjectTree.Object> projectItems = [PlcBlock];
-        projectItems.AddRange(DerivedTypes);
         List<Core.Models.ProjectTree.Object> derivedTypes = [];
-        derivedTypes.AddRange(DerivedTypes);
+        if(DerivedTypes?.Count > 0)
+        {
+            projectItems.AddRange(DerivedTypes);
+            derivedTypes.AddRange(DerivedTypes);
+        }
 
         if(ReferenceLanguage is null) return;
 

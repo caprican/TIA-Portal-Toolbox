@@ -1,9 +1,14 @@
-﻿using TiaPortalToolbox.Core.Contracts.Services;
-using System.Xml.Serialization;
+﻿using System.Diagnostics;
 using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Xml.Serialization;
+
+using Siemens.Engineering.SW.Blocks;
+
 using SimaticML.SW.Common;
 using SimaticML.SW.InterfaceSections;
-using System.Text.RegularExpressions;
+
+using TiaPortalToolbox.Core.Contracts.Services;
 
 namespace TiaPortalToolbox.Core.Services;
 
@@ -11,24 +16,61 @@ public class PlcService(IOpennessService opennessService) : IPlcService
 {
     private readonly IOpennessService opennessService = opennessService;
     
-    public async Task GetMetaDataBlockAsync(Models.ProjectTree.Plc.Object plcItem)
+    public async Task GetMetaDataBlockAsync(Models.ProjectTree.Plc.Object? plcItem)
     {
         var fileNames = await opennessService.ExportAsync(plcItem);
         if(fileNames?.Length > 0)
         {
             foreach (var fileName in fileNames)
             {
-                GetMetaDataBlock(fileName, plcItem);
+                switch(plcItem)
+                {
+                    case Models.ProjectTree.Plc.Type plcType:
+                        ReadPlcBlock(fileName, plcType);
+                        break;
+                    case Models.ProjectTree.Plc.Blocks.Object plcBlock :
+                        ReadPlcBlock(fileName, plcBlock);
+                        break;
+                    default:
+                        GetBlock(fileName, plcItem);
+                        break;
+                }
             }
         }
     }
 
-    public Models.ProjectTree.Plc.Object GetMetaDataBlock(string fileName, Models.ProjectTree.Plc.Object? plcItem = null)
+    public async Task GetMetaDataBlockAsync(string fileName)
+    {
+        ReadPlcBlock(fileName, null);
+    }
+
+    private void GetBlock(string fileName, Models.ProjectTree.Object? plcItem = null)
+    {
+        var plcChild = plcItem?.Items?.SingleOrDefault(f => f.Name == Path.GetFileNameWithoutExtension(fileName));
+        if (plcChild is Models.ProjectTree.Plc.Object item)
+        {
+            ReadPlcBlock(fileName, item);
+        }
+        else
+        {
+            if(plcItem?.Items is not null)
+            {
+                foreach (var subitem in plcItem.Items)
+                {
+                    GetBlock(fileName, subitem);
+                }
+            }
+        }
+        
+    }
+
+    private Models.ProjectTree.Plc.Object ReadPlcBlock(string fileName, Models.ProjectTree.Plc.Object? plcItem)
     {
         var serializer = new XmlSerializer(typeof(SimaticML.Document));
         var myFile = new FileStream(fileName, FileMode.Open);
         if (serializer.Deserialize(myFile) is SimaticML.Document document)
         {
+            Debug.WriteLine($"Deserialize file : {fileName}");
             foreach (var item in document)
             {
                 plcItem ??= item switch
@@ -316,20 +358,28 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                 case SimaticML.ProgrammingLanguage_TE.SCL:
 
                     var comments = NetworkComment(compileUnit.OfType<SimaticML.MultilingualText_T>());
-                    
-                    foreach (var region in StructuredTextRegions(compileUnit.Attributes.NetworkSource))
-                    {
-                        var networks = NetworkComment(region, languages);
 
-                        if (comments?.TryGetValue(Core.Models.PlcNetworkCommentType.Title, out var title) == true && networks.ContainsKey(Core.Models.PlcNetworkCommentType.Title))
+                    var regions = StructuredTextRegions(compileUnit.Attributes.NetworkSource);
+                    if(regions?.Count == 0)
+                    {
+                        results.Add(comments);
+                    }
+                    else
+                    {
+                        foreach (var region in regions!)
                         {
-                            if (networks[Core.Models.PlcNetworkCommentType.Title].All(a => string.IsNullOrEmpty(a.Value)) == true)
+                            var networks = NetworkComment(region, languages);
+
+                            if (comments?.TryGetValue(Core.Models.PlcNetworkCommentType.Title, out var title) == true && networks.ContainsKey(Core.Models.PlcNetworkCommentType.Title))
                             {
-                                networks[Core.Models.PlcNetworkCommentType.Title] = title;
+                                if (networks[Core.Models.PlcNetworkCommentType.Title].All(a => string.IsNullOrEmpty(a.Value)) == true)
+                                {
+                                    networks[Core.Models.PlcNetworkCommentType.Title] = title;
+                                }
+
                             }
-                            
+                            results.Add(networks);
                         }
-                        results.Add(networks);
                     }
 
                     break;
