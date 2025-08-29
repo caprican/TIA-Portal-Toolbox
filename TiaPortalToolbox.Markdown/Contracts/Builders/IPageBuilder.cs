@@ -1,10 +1,8 @@
-﻿using System.Globalization;
-
-using DocumentFormat.OpenXml;
+﻿using DocumentFormat.OpenXml;
 
 namespace TiaPortalToolbox.Doc.Contracts.Builders;
 
 public interface IPageBuilder
 {
-    internal OpenXmlElement[] Build(CultureInfo culture);
+    internal void Build();
 }

@@ -3,8 +3,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
-using Siemens.Engineering.SW.Blocks;
-
 using SimaticML.SW.Common;
 using SimaticML.SW.InterfaceSections;
 
@@ -39,9 +37,9 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         }
     }
 
-    public async Task GetMetaDataBlockAsync(string fileName)
+    public async Task<Models.ProjectTree.Plc.Object?> GetMetaDataBlockAsync(string fileName)
     {
-        ReadPlcBlock(fileName, null);
+        return ReadPlcBlock(fileName, null);
     }
 
     private void GetBlock(string fileName, Models.ProjectTree.Object? plcItem = null)
@@ -61,10 +59,9 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                 }
             }
         }
-        
     }
 
-    private Models.ProjectTree.Plc.Object ReadPlcBlock(string fileName, Models.ProjectTree.Plc.Object? plcItem)
+    private Models.ProjectTree.Plc.Object? ReadPlcBlock(string fileName, Models.ProjectTree.Plc.Object? plcItem)
     {
         var serializer = new XmlSerializer(typeof(SimaticML.Document));
         var myFile = new FileStream(fileName, FileMode.Open);
@@ -79,19 +76,15 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                     SimaticML.SW.Blocks.FB fb => new Models.ProjectTree.Plc.Blocks.Fb(null, ""),
                     SimaticML.SW.Blocks.GlobalDB globalDb => new Models.ProjectTree.Plc.Blocks.DataBlocks.GlobalData(null, ""),
                     SimaticML.SW.Blocks.ArrayDB arrayDb => new Models.ProjectTree.Plc.Blocks.DataBlocks.ArrayDb(null, ""),
-                    SimaticML.SW.Types.PlcStruct plcStruct => new Models.ProjectTree.Plc.Type(null, ""),
-                    _ => new Models.ProjectTree.Plc.Item(null, ""),
+                    
+                    SimaticML.SW.Types.PlcStruct plcStruct => new Models.ProjectTree.Plc.Type(plcStruct, string.Empty),
+
+                    SimaticML.SW.Tags.PlcTagTable plcTagTable => new Models.ProjectTree.Plc.Tag(plcTagTable, string.Empty),
+
+                    _ => new Models.ProjectTree.Plc.Item(string.Empty, string.Empty),
                 };
 
-                foreach (var multilingualText in item.OfType<SimaticML.MultilingualText_T>().FirstOrDefault().OfType<SimaticML.MultilingualTextItem_T>())
-                {
-                    plcItem.Languages ??= [];
-                    var culture = CultureInfo.GetCultureInfo(multilingualText.Culture);
-                    if (!plcItem.Languages.Contains(culture))
-                    {
-                        plcItem.Languages.Add(culture);
-                    }
-                }
+                plcItem.Languages = GetCultures(item);
 
                 switch(plcItem)
                 {
@@ -131,11 +124,20 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                             _ => null,
                         };
                         break;
-                }
 
+                    case Models.ProjectTree.Plc.Tag tag:
+                        tag.Members = item switch
+                        {
+                            SimaticML.SW.Tags.PlcTagTable plcTagTable => GetContants(plcTagTable.OfType<SimaticML.SW.Tags.PlcUserConstant>(), plcItem.Languages),
+                            _ => null,
+                        };
+                        break;
+                }
 
                 var programmingLanguage = item switch
                 {
+                    SimaticML.SW.Blocks.OB ob => ob.Attributes.ProgrammingLanguage,
+
                     SimaticML.SW.Blocks.FC fc => fc.Attributes.ProgrammingLanguage,
                     SimaticML.SW.Blocks.FB fb => fb.Attributes.ProgrammingLanguage,
 
@@ -146,8 +148,11 @@ public class PlcService(IOpennessService opennessService) : IPlcService
 
                 var compileUnits = item switch
                 {
+                    SimaticML.SW.Blocks.OB ob => GetCompileUnits(ob.OfType<SimaticML.SW.Blocks.CompileUnit>(), programmingLanguage, plcItem.Languages),
+
                     SimaticML.SW.Blocks.FC fc => GetCompileUnits(fc.OfType<SimaticML.SW.Blocks.CompileUnit>(), programmingLanguage, plcItem.Languages),
                     SimaticML.SW.Blocks.FB fb => GetCompileUnits(fb.OfType<SimaticML.SW.Blocks.CompileUnit>(), programmingLanguage, plcItem.Languages),
+
                     _ => null,
                 };
 
@@ -155,19 +160,19 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                 {
                     foreach (var compileUnit in compileUnits)
                     {
-                        if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("BLOCK INFO HEADER", StringComparison.InvariantCultureIgnoreCase)))
+                        if (compileUnit[Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("BLOCK INFO HEADER", StringComparison.InvariantCultureIgnoreCase)))
                         {
-                            GetNetworkHeader(compileUnit[Core.Models.PlcNetworkCommentType.Comment], plcItem);
+                            GetNetworkHeader(compileUnit[Models.PlcNetworkCommentType.Comment], plcItem);
                         }
-                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("PREAMBLE", StringComparison.InvariantCultureIgnoreCase)))
+                        else if (compileUnit[Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("PREAMBLE", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Preamble = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
                         }
-                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("DESCRIPTION", StringComparison.InvariantCultureIgnoreCase)))
+                        else if (compileUnit[Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("DESCRIPTION", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Descriptions = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
                         }
-                        else if (compileUnit[Core.Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("APPENDIX", StringComparison.InvariantCultureIgnoreCase)))
+                        else if (compileUnit[Models.PlcNetworkCommentType.Title].Any(a => a.Value.Trim().Equals("APPENDIX", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             ((Models.ProjectTree.Plc.Blocks.Object)plcItem).Appendix = compileUnit[Core.Models.PlcNetworkCommentType.Comment];
                         }
@@ -177,6 +182,45 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         }
 
         return plcItem;
+    }
+
+    private List<CultureInfo>? GetCultures(SimaticML.Object_T? items)
+    {
+        List<CultureInfo>? cultures = null;
+
+        if(items is null) return null;
+
+        var multilingualTexts = items.OfType<SimaticML.MultilingualTextItem_T>();
+        if (multilingualTexts?.Count() > 0)
+        {
+            foreach (var multilingualText in multilingualTexts)
+            {
+                cultures ??= [];
+                var culture = CultureInfo.GetCultureInfo(multilingualText.Culture);
+                if (!cultures.Contains(culture))
+                {
+                    cultures.Add(culture);
+                }
+            }
+        }
+
+        foreach (var item in items)
+        {
+            var tempCultures = GetCultures(item);
+            if (tempCultures?.Count() > 0)
+            {
+                foreach (var culture in tempCultures)
+                {
+                    cultures ??= [];
+                    if (!cultures.Contains(culture))
+                    {
+                        cultures.Add(culture);
+                    }
+                }
+            }   
+        }
+
+        return cultures;
     }
 
     public async Task<Models.ProjectTree.Plc.Object?> GetItem(string name) => await opennessService.GetItem(name) as Models.ProjectTree.Plc.Object;
@@ -253,7 +297,7 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return cultureMembers;
     }
 
-    private Core.Models.InterfaceMember GetMember(SectionName_TE sectionName, IMember_T member)
+    private Core.Models.InterfaceMember GetMember(SectionName_TE sectionName, IMember member)
     {
         var result = new Core.Models.InterfaceMember
         {
@@ -271,13 +315,13 @@ public class PlcService(IOpennessService opennessService) : IPlcService
             DerivedType = GetDerivedType(member.Datatype),
             Descriptions = GetMemberComment(member.Comment),
             Islocked = sectionName == SectionName_TE.Return,
-            DefaultValue = GetMemberStartValue(member.OfType<StartValue_T>()),
+            DefaultValue = GetMemberStartValue(member.OfType<StartValue_T>(), member.Attributes),
             HidenInterface = member.Attributes?.Any(attr => attr is StringAttribute_T hiddenAssign && hiddenAssign.Name == "S7_HiddenAssignment" && hiddenAssign.Value == "Hide") == true
         };
 
         if (member.Count() > 0)
         {
-            foreach(IMember_T child in member.OfType<Member_T>())
+            foreach(IMember child in member.OfType<Member_T>())
             {
                 result.Members ??= [];
                 result.Members.Add(GetMember(sectionName, child));
@@ -287,6 +331,68 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return result;
     }
 
+    internal Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? GetTags(IEnumerable<SimaticML.SW.Tags.PlcTag> items, IEnumerable<CultureInfo>? languages)
+    {
+        Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? cultureMembers = null;
+
+        if (languages is null) return null;
+
+        foreach(var language in languages)
+        {
+            List<Core.Models.InterfaceMember>? members = null;
+            foreach (var item in items)
+            {
+                members ??= [];
+                members.Add(new Models.InterfaceMember
+                {
+                    Name = item.Attributes.Name,
+                    Type = GetMemberType(item.Attributes.DataTypeName),
+                    Descriptions = GetMemberComment(item.OfType<SimaticML.MultilingualText_T>()),
+                });
+            }
+
+
+            if (members?.Count > 0)
+            {
+                cultureMembers ??= [];
+                cultureMembers.Add(language, members);
+            }
+        }
+
+        return cultureMembers;
+    }
+
+    internal Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? GetContants(IEnumerable<SimaticML.SW.Tags.PlcUserConstant> items, IEnumerable<CultureInfo>? languages)
+    {
+        Dictionary<CultureInfo, List<Core.Models.InterfaceMember>>? cultureMembers = null;
+
+        if (languages is null) return null;
+
+        foreach (var language in languages)
+        {
+            List<Core.Models.InterfaceMember>? members = null;
+            foreach (var item in items)
+            {
+                members ??= [];
+                members.Add(new Models.InterfaceMember
+                {
+                    Name = item.Attributes.Name,
+                    Type = GetMemberType(item.Attributes.DataTypeName),
+                    IsConstant = true,
+                    DefaultValue = item.Attributes.Value,
+                    Descriptions = GetMemberComment(item.OfType<SimaticML.MultilingualText_T>()),
+                });
+            }
+
+            if (members?.Count > 0)
+            {
+                cultureMembers ??= [];
+                cultureMembers.Add(language, members);
+            }
+        }
+
+        return cultureMembers;
+    }
 
     private string? GetMemberType(string memberType)
     {
@@ -338,11 +444,40 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         return result.Count > 0 ? result : null;
     }
 
-    private string GetMemberStartValue(IEnumerable<StartValue_T> startValues)
+    private Dictionary<CultureInfo, string>? GetMemberComment(IEnumerable<SimaticML.MultilingualText_T>? texts)
+    {
+        var result = new Dictionary<CultureInfo, string>();
+
+        if (texts is not null)
+        {
+            foreach (var text in texts)
+            {
+                foreach (var comment in text.OfType<SimaticML.MultilingualTextItem_T>())
+                {
+                    result.Add(CultureInfo.GetCultureInfo(comment.Culture), comment.Text);
+                }
+            }
+        }
+
+        return result.Count > 0 ? result : null;
+    }
+
+    private string GetMemberStartValue(IEnumerable<StartValue_T> startValues, AttributeBase[] attributes)
     {
         foreach (var value in startValues)
         {
             return value.Value;
+        }
+
+        if(attributes?.Count() > 0)
+        {
+            foreach (var attribute in attributes.OfType<BooleanAttribute_T>())
+            {
+                if(attribute.Name == "SetPoint")
+                {
+                    return attribute.Value.ToString();
+                }
+            }
         }
 
         return string.Empty;
@@ -401,7 +536,7 @@ public class PlcService(IOpennessService opennessService) : IPlcService
         List<List<SimaticML.SW.Object_G>> regions = [];
         if (networkSource is not null)
         {
-            foreach (var structuredText in networkSource)
+            foreach (var structuredText in networkSource.OfType<SimaticML.SW.PlcBlocks.SCL.IStructuredText_T>())
             {
                 var SclItems = structuredText.ToList();
                 var regionTags = SclItems.FindAll(item => item is Token_T token && (token.Text == "REGION" || token.Text == "END_REGION"));
@@ -522,27 +657,77 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                 {
                     case "Title":
                         plcItem.Title ??= [];
-                        plcItem.Title.Add(culture.Key, attribut.Groups[2].Value.Trim());
+
+                        if(plcItem.Title.ContainsKey(culture.Key))
+                        {
+                            plcItem.Title[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Title.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+
+                        //plcItem.Title.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                     case "Author":
                         plcItem.Author ??= [];
-                        plcItem.Author.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        if(plcItem.Author.ContainsKey(culture.Key))
+                        {
+                            plcItem.Author[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Author.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+                        //plcItem.Author.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                     case "Comment":
                         plcItem.Comment ??= [];
-                        plcItem.Comment.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        if(plcItem.Comment.ContainsKey(culture.Key))
+                        {
+                            plcItem.Comment[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Comment.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+                        //plcItem.Comment.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                     case "Function":
                         plcItem.Function ??= [];
-                        plcItem.Function.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        if(plcItem.Function.ContainsKey(culture.Key))
+                        {
+                            plcItem.Function[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Function.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+                        //plcItem.Function.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                     case "Library":
                         plcItem.Library ??= [];
-                        plcItem.Library.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        if(plcItem.Library.ContainsKey(culture.Key))
+                        {
+                            plcItem.Library[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Library.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+                        //plcItem.Library.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                     case "Family":
                         plcItem.Family ??= [];
-                        plcItem.Family.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        if(plcItem.Family.ContainsKey(culture.Key))
+                        {
+                            plcItem.Family[culture.Key] = attribut.Groups[2].Value.Trim();
+                        }
+                        else
+                        {
+                            plcItem.Family.Add(culture.Key, attribut.Groups[2].Value.Trim());
+                        }
+                        //plcItem.Family.Add(culture.Key, attribut.Groups[2].Value.Trim());
                         break;
                 }
             }
@@ -564,9 +749,9 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                     {
                         var log = new Models.PlcBlockLog
                         {
-                            Author = items[headers.IndexOf("Expert in charge")],
-                            Version = items[headers.IndexOf("Version")],
-                            Description = items[headers.IndexOf("Changes applied")]
+                            Author = items[headers.IndexOf("Expert in charge")].Trim(),
+                            Version = items[headers.IndexOf("Version")].Trim(),
+                            Description = items[headers.IndexOf("Changes applied")].Trim()
                         };
 
                         if (DateTime.TryParse(items[headers.IndexOf("Date")], out DateTime edited))
@@ -581,7 +766,10 @@ public class PlcService(IOpennessService opennessService) : IPlcService
                 if (logs?.Count > 0)
                 {
                     plcItem.Logs ??= [];
-                    plcItem.Logs.Add(culture.Key, logs);
+                    if (plcItem.Logs.ContainsKey(culture.Key))
+                        plcItem.Logs[culture.Key] = logs;
+                    else
+                        plcItem.Logs.Add(culture.Key, logs);
                 }
             }
 

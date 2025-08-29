@@ -1,11 +1,10 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace TiaPortalToolbox.Doc.Models;
+namespace DocumentFormat.OpenXml.Packaging;
 
-internal static class DocumentNumberings
+public static class NumberingDefinitionsPartExtensions
 {
-    internal static void SetDefault(this DocumentFormat.OpenXml.Wordprocessing.Numbering numbering)
+    public static void SetDefault(this Numbering numbering)
     {
         numbering ??= new DocumentFormat.OpenXml.Wordprocessing.Numbering();
         var abstractNumberId = numbering.Elements<AbstractNum>().Count();

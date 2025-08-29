@@ -6,6 +6,8 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using MahApps.Metro.Controls;
+
 using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Core.Models.ProjectTree;
@@ -21,7 +23,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     private readonly IOpennessService opennessService = opennessService;
     private readonly ISettingsService settingsService = settingsService;
 
-    private ICommand? goBackCommand;
+    private RelayCommand? goBackCommand;
     private ICommand? loadedCommand;
     private ICommand? unloadedCommand;
     private ICommand? exportItemCommand;
@@ -29,7 +31,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     private bool paneOpen = false;
     private ObservableCollection<Core.Models.ProjectTree.Object>? projectTreeItems;
 
-    public ICommand GoBackCommand => goBackCommand ??= new RelayCommand(OnGoBack, CanGoBack);
+    public RelayCommand GoBackCommand => goBackCommand ??= new RelayCommand(OnGoBack, CanGoBack);
 
     public ICommand LoadedCommand => loadedCommand ??= new AsyncRelayCommand(OnLoaded);
     public ICommand UnloadedCommand => unloadedCommand ??= new RelayCommand(OnUnloaded);
@@ -69,6 +71,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     private void OnUnloaded()
     {
         PaneOpen = false;
+        navigationService.Navigated -= OnNavigated;
         opennessService.NewProjectOpenned -= OnNewProjectOpenned;
     }
 
@@ -81,13 +84,34 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
         PaneOpen = true;
 
         ProjectTreeItems = opennessService.ProjectTreeItems;
+
+        navigationService.Navigated += OnNavigated;
+    }
+
+    private void OnNavigated(object? sender, string? viewModelName)
+    {
+        //var item = MenuItems
+        //            .OfType<HamburgerMenuItem>()
+        //            .FirstOrDefault(i => viewModelName == i.TargetPageType?.FullName);
+        //if (item != null)
+        //{
+        //    SelectedMenuItem = item;
+        //}
+        //else
+        //{
+        //    SelectedOptionsMenuItem = OptionMenuItems
+        //            .OfType<HamburgerMenuItem>()
+        //            .FirstOrDefault(i => viewModelName == i.TargetPageType?.FullName);
+        //}
+
+        GoBackCommand.NotifyCanExecuteChanged();
     }
 
     private async Task OnExport(Item? item)
     {
         if (item is null) return;
 
-        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Properties.Resources.ProgressDialogExportHeader, item.Name);
         progress.SetIndeterminate();
 
         await opennessService.ExportAsync(item);

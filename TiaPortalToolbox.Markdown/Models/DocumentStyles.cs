@@ -2,41 +2,172 @@
 
 namespace TiaPortalToolbox.Doc.Models;
 
-internal class DocumentStyles(Models.DocumentSettings? settings)
+public class DocumentStyles : Markdig.Renderers.Docx.Contracts.IDocumentStyle
 {
-    private readonly DocumentSettings? settings = settings;
+    public Dictionary<string, string> MarkdownStyles { get; set; } = new()
+    {
+        ["UndefinedHeading"] = "heading5",
+        ["UnknownFormatting"] = "Normal",
+
+        ["Paragraph"] = "MDParagraphTextBody",
+        ["CodeBlock"] = "Code",
+        ["Quote"] = "MDQuotations",
+        ["HorizontalLine"] = "MDHorizontalLine",
+
+        ["ListOrdered"] = "MDListNumber",
+        ["ListOrderedItem"] = "MDListNumberItem",
+        ["ListBullet"] = "Listbullet",
+        ["ListBulletItem"] = "MDListBulletItem",
+
+        ["Hyperlink"] = "MDHyperlink",
+        ["CodeInline"] = "CodeChar",
+
+        ["DefinitionTerm"] = "DefinitionTerm",
+        ["DefinitionItem"] = "DefinitionItem",
+
+        ["BlockTitle"] = "Blocktitle",
+        ["BlockText"] = "Blocktext",
+    };
+
+    public Dictionary<int, string> Headings { get; set; } = new()
+    {
+        [0] = "Title",
+        [1] = "heading1",
+        [2] = "heading2",
+        [3] = "heading3",
+        [4] = "heading4",
+        [5] = "heading5",
+        [6] = "heading6",
+    };
+
+    public Dictionary<string, Markdig.Renderers.Docx.Contracts.IDocumentStyleTable> TableStyles { get; set; } = new()
+    {
+        ["Default"] = new Markdig.Renderers.Docx.DocumentStyleTable
+        {
+            StyleName = "TableGrid",
+            BorderColor = "Auto",
+            BorderSpace = 0,
+            BorderSize = 4,
+            ShadingColor = "Auto",
+            ShadingFill = "Auto",
+
+            StyleTextLeft = "TableTextLeft",
+            StyleTextCenter = "TableTextCenter",
+            StyleTextRight = "TableTextRight",
+
+            Header = new Markdig.Renderers.Docx.DocumentStyleTable
+            {
+                BorderColor = "Auto",
+                BorderSpace = 0,
+                BorderSize = 12,
+                ShadingColor = "Auto",
+                ShadingFill = "E6E6E6"
+            }
+        },
+        ["LogTable"] = new Markdig.Renderers.Docx.DocumentStyleTable
+        {
+            StyleName = "TableGrid",
+            BorderColor = "Auto",
+            BorderSpace = 0,
+            BorderSize = 4,
+            ShadingColor = "Auto",
+            ShadingFill = "Auto",
+
+            StyleTextLeft = "TableTextLeft",
+            StyleTextCenter = "TableTextCenter",
+            StyleTextRight = "TableTextRight",
+
+            Header = new Markdig.Renderers.Docx.DocumentStyleTable
+            {
+                BorderColor = "Auto",
+                BorderSpace = 0,
+                BorderSize = 12,
+                ShadingColor = "Auto",
+                ShadingFill = "E6E6E6"
+            }
+        },
+        ["IoTable"] = new Markdig.Renderers.Docx.DocumentStyleTable
+        {
+            StyleName = "TableGrid",
+            BorderColor = "Auto",
+            BorderSpace = 0,
+            BorderSize = 4,
+            ShadingColor = "Auto",
+            ShadingFill = "Auto",
+
+            StyleTextLeft = "TableTextLeft",
+            StyleTextCenter = "TableTextCenter",
+            StyleTextRight = "TableTextRight",
+
+            Header = new Markdig.Renderers.Docx.DocumentStyleTable
+            {
+                BorderColor = "Auto",
+                BorderSpace = 0,
+                BorderSize = 12,
+                ShadingColor = "Auto",
+                ShadingFill = "E6E6E6"
+            }
+        },
+        ["Block"] = new Models.GraphicBlocStyle
+        {
+            StyleName = "TableGrid",
+            TableSize = 8000,
+            FunctionBlockNameSize = 2400,
+            FunctionBlockConnectorSize = 250,
+            FunctionBlockTypeSize = 1300,
+            BorderColor = "Auto",
+            BorderSpace = 0,
+            BorderSize = 4,
+            ShadingColor = "Auto",
+            ShadingFill = "Auto",
+            ShadingFillSafety = "FFFF33",
+            ShadingFillLock = "EEEEEE",
+            ColorHidden = "777777",
+            Header = new Markdig.Renderers.Docx.DocumentStyleTable
+            {
+                BorderColor = "Auto",
+                BorderSpace = 0,
+                BorderSize = 12,
+                ShadingColor = "Auto",
+                ShadingFill = "E6E6E6"
+            }
+        }
+    };
 
     internal Style[] SetDefault()
     {
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Document, ("Normal", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Title, ("Title", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Document, ("Normal", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Title, ("Title", null));
 
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading1, ("heading1", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading2, ("heading2", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading3, ("heading3", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading4, ("heading4", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading5, ("heading5", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading6, ("heading6", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading1, ("heading1", 1));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading2, ("heading2", 2));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading3, ("heading3", 3));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading4, ("heading4", 4));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading5, ("heading5", 5));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Heading6, ("heading6", 6));
 
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BlockTitle, ("Blocktitle", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BlockText, ("Blocktext", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BulletText, ("BulletText", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BlockTitle, ("Blocktitle", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BlockText, ("Blocktext", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.BulletText, ("BulletText", null));
         
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Code, ("Code", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.Code, ("Code", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.CodeChar, ("CodeChar", null));
 
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableGrid, ("TableGrid", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableHeaderLeft, ("TableHeaderLeft", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableHeaderCenter, ("TableHeaderCenter", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableGrid, ("TableGrid", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableHeaderLeft, ("TableHeaderLeft", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableHeaderCenter, ("TableHeaderCenter", null));
 
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextLeft, ("TableTextLeft", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextCenter, ("TableTextCenter", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextRight, ("TableTextRight", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextLeft, ("TableTextLeft", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextCenter, ("TableTextCenter", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.TableTextRight, ("TableTextRight", null));
 
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet, ("Listbullet", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet2, ("Listbullet2", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet3, ("Listbullet3", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet4, ("Listbullet4", null));
-        Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet5, ("Listbullet5", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet, ("Listbullet", null));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet2, ("Listbullet2", 2));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet3, ("Listbullet3", 3));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet4, ("Listbullet4", 4));
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.ListBullet5, ("Listbullet5", 5));
+
+        //Helpers.DocumentHelper.Styles.Add(OpenXmlStyles.QuoteBlock, ("MDQuotations", null));
 
         var styles = new List<Style>
         {
@@ -415,7 +546,7 @@ internal class DocumentStyles(Models.DocumentSettings? settings)
             new() {
                 StyleId = "Code",
                 //CustomStyle = true,
-                Type = StyleValues.Character,
+                Type = StyleValues.Paragraph,
                 StyleName = new StyleName { Val = "Code" },
                 BasedOn = new BasedOn { Val = "Standard" },
                 LinkedStyle = new LinkedStyle { Val = "CodeChar" },
@@ -423,12 +554,12 @@ internal class DocumentStyles(Models.DocumentSettings? settings)
                 {
                     Shading = new Shading { Val = ShadingPatternValues.Clear, Fill = "D9D9D9", Color = "Auto" },
                 },
-                StyleRunProperties = new StyleRunProperties
-                {
-                    RunFonts = new RunFonts { Ascii = "Courier New", HighAnsi = "Courier New" },
-                    FontSize = new FontSize { Val = "18" },
-                    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                }
+                //StyleRunProperties = new StyleRunProperties
+                //{
+                //    RunFonts = new RunFonts { Ascii = "Courier New", HighAnsi = "Courier New" },
+                //    FontSize = new FontSize { Val = "18" },
+                //    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
+                //}
             },
             new()
             {
@@ -440,7 +571,7 @@ internal class DocumentStyles(Models.DocumentSettings? settings)
                 LinkedStyle = new LinkedStyle { Val = "Code" },
                 StyleRunProperties = new StyleRunProperties
                 {
-                    RunFonts = new RunFonts { Ascii = "Courier New", HighAnsi = "Courier New", EastAsia = "Arial Unicode MS" },
+                    RunFonts = new RunFonts { Ascii = "Courier New", HighAnsi = "Courier New" },
                     FontSize = new FontSize { Val = "18" },
                     Shading = new Shading { Val = ShadingPatternValues.Clear, Fill = "D9D9D9", Color = "Auto" },
                     NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
@@ -576,8 +707,59 @@ internal class DocumentStyles(Models.DocumentSettings? settings)
                     Justification = new Justification { Val = JustificationValues.Right }
                 }
             },
+
+
+            new()
+            {
+                StyleId = "MDQuotations",
+                CustomStyle = true,
+                Type = StyleValues.Paragraph,
+                StyleName = new StyleName { Val = "MD Quotations" },
+                
+                BasedOn = new BasedOn{Val = "MDParagraphTextBody"},
+                LinkedStyle = new LinkedStyle { Val = "MDQuotations0" },
+                PrimaryStyle = new PrimaryStyle(),
+                StyleParagraphProperties = new StyleParagraphProperties
+                { 
+                    ParagraphBorders = new ParagraphBorders
+                    {
+                        LeftBorder = new LeftBorder
+                        {
+                            Color = "A6A6A6",
+                            ThemeShade = "A6",
+                            Size = 18u,
+                            Space = 10u,
+                            Val = BorderValues.Single,
+                            ThemeColor = ThemeColorValues.Text1
+                        }
+                    },
+                    SpacingBetweenLines = new SpacingBetweenLines
+                    {
+                        Before = "240",
+                        After = "120"
+                    },
+                    Indentation = new Indentation
+                    {
+                        Left = "198",
+                    }
+                },
+                StyleRunProperties = new StyleRunProperties
+                {
+                    Color = new Color
+                    {
+                        Val = "767171",
+                        ThemeShade = "80",
+                        ThemeColor = ThemeColorValues.Text1
+                    }
+                }
+            },
         };
 
         return [.. styles];
+    }
+
+    public bool Contains(string styleName)
+    {
+        throw new NotImplementedException();
     }
 }

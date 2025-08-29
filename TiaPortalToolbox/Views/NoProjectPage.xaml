@@ -38,12 +38,12 @@
             Text="" />
 
         <WrapPanel Margin="100 0 0 0" Grid.Row="1" Width="940"  HorizontalAlignment="Left" VerticalAlignment="Top">
-            <controls:Tile Title="Open new project" Margin="3" Background="Teal" Command="{Binding OpenCommand}"
+            <controls:Tile Title="{x:Static properties:Resources.NoProjectPageOpenTitle}" Margin="3" Background="Teal" Command="{Binding OpenCommand}"
                     controls:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
                     HorizontalTitleAlignment="Right" Style="{StaticResource LargeTileStyle}">
                 <!--<iconPacks:PackIconModern Width="40" Height="40" Kind="Email" />-->
             </controls:Tile>
-            <controls:Tile Title="Select projet openned" Margin="3" Command="{Binding AttachCommand}"
+            <controls:Tile Title="{x:Static properties:Resources.NoProjectPageSelectTitle}" Margin="3" Command="{Binding AttachCommand}"
                     controls:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
                     Style="{StaticResource LargeTileStyle}">
                 <!--<iconPacks:PackIconFontAwesome Width="40" Height="40" Kind="DesktopSolid" />-->

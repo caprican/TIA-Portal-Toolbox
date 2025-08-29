@@ -49,11 +49,19 @@ public class Worker(IHostApplicationLifetime hostApplicationLifetime, IOpennessS
         List<TiaPortalToolbox.Core.Models.ProjectTree.Object> projectItems = [];
         List<TiaPortalToolbox.Core.Models.ProjectTree.Object> derivedItems = [];
 
-        var fileName = @$"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\LSKF_Motor.xml";
-        projectItems.Add(plcService.GetMetaDataBlock(fileName));
+        var fileName = @$"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\LSKF_DigitalInput.xml";
+        projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));
 
-        fileName = @$"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\LSKF_typeMotor.xml";
-        projectItems.Add(plcService.GetMetaDataBlock(fileName));
+        //fileName = $@"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\Table de variables standard.xml";
+        //projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));
+        //fileName = $@"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\IOLink_Constants.xml";
+        //projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));
+
+        //fileName = $@"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\TMA R1.xml";
+        //projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));
+
+        //fileName = @$"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\LSKF_typeMotor.xml";
+        //projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));
 
         var culture = CultureInfo.GetCultureInfo("fr-FR");
         if (File.Exists(@$"C:/Users/capri/Downloads/{projectName}_{culture.Name}.docx"))

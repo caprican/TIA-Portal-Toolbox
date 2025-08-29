@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Markdown", "..\DocSharp\src\DocSharp.Markdown\DocSharp.Markdown.csproj", "{1FCE54E8-EE43-6704-CDB4-4E0DAA257138}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,11 +48,19 @@ Global
 		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39BD6311-B217-4762-9AD6-D6BFB5F7F457}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FCE54E8-EE43-6704-CDB4-4E0DAA257138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FCE54E8-EE43-6704-CDB4-4E0DAA257138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FCE54E8-EE43-6704-CDB4-4E0DAA257138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FCE54E8-EE43-6704-CDB4-4E0DAA257138}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{72ED49F6-813E-4842-8D0A-FEB9983A3844} = {B53EBD88-F75F-4BA3-98F5-D28D66850B11}
+		{1FCE54E8-EE43-6704-CDB4-4E0DAA257138} = {B53EBD88-F75F-4BA3-98F5-D28D66850B11}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8475BEE-05F1-4F44-A9B9-E681347D6CB9}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TiaPortalToolbox.Console": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "Console": "True"
+      }
+    }
+  }
+}

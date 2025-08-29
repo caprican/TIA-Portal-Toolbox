@@ -120,6 +120,9 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>TIA Portal toolbox</value>
   </data>
+  <data name="MainPageDocumentTitle" xml:space="preserve">
+    <value>Documents</value>
+  </data>
   <data name="MainPageHmiAlarmTitle" xml:space="preserve">
     <value>HMI Alarms</value>
   </data>
@@ -164,6 +167,9 @@
   </data>
   <data name="SettingsPageAboutTitle" xml:space="preserve">
     <value>About this application</value>
+  </data>
+  <data name="SettingsPageChooseLanguageText" xml:space="preserve">
+    <value>Choose language</value>
   </data>
   <data name="SettingsPageChooseThemeText" xml:space="preserve">
     <value>Choose Theme</value>
@@ -221,5 +227,59 @@
   </data>
   <data name="ShellPageRibbonTabHomeHeader" xml:space="preserve">
     <value>Home</value>
+  </data>
+  <data name="NoProjectPageOpenTitle" xml:space="preserve">
+    <value>Open exist project</value>
+  </data>
+  <data name="NoProjectPageSelectTitle" xml:space="preserve">
+    <value>Select projet openned</value>
+  </data>
+  <data name="DocumentPageRibbonTabHeader" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="DocumentPageRibbonTabBuildDocumentHeader" xml:space="preserve">
+    <value>Build document</value>
+  </data>
+  <data name="DocumentPageAuthorText" xml:space="preserve">
+    <value>Author: </value>
+  </data>
+  <data name="DocumentPageLibraryText" xml:space="preserve">
+    <value>Library: </value>
+  </data>
+  <data name="DocumentPageFamilyText" xml:space="preserve">
+    <value>Family: </value>
+  </data>
+  <data name="DocumentPageInterfaceExpandeHeader" xml:space="preserve">
+    <value>Interface</value>
+  </data>
+  <data name="DocumentPageNameColumnHeader" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="DocumentPageTypeColumnHeader" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="DocumentPageDefaultValueColumnHeader" xml:space="preserve">
+    <value>Default value</value>
+  </data>
+  <data name="DocumentPageDescriptionColumnHeader" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DocumentPageLogExpandeHeader" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="DocumentPageVersionColumnHeader" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="DocumentPageAuthorColumnHeader" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="DocumentPageEditedColumnHeader" xml:space="preserve">
+    <value>Edited</value>
+  </data>
+  <data name="DocumentPageLoadTitle" xml:space="preserve">
+    <value>Loading PLC blocks</value>
+  </data>
+  <data name="ProgressDialogExportHeader" xml:space="preserve">
+    <value>Export of the PLC block</value>
   </data>
 </root>

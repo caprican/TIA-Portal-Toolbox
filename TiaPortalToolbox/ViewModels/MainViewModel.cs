@@ -10,7 +10,7 @@ using TiaPortalToolbox.Core.Contracts.Services;
 namespace TiaPortalToolbox.ViewModels;
 
 public class MainViewModel(INavigationService navigationService, IOpennessService opennessService, 
-                            IShellWindow shellWindow) : ObservableObject, INavigationAware
+                           IShellWindow shellWindow) : ObservableObject, INavigationAware
 {
     private readonly INavigationService navigationService = navigationService;
     private readonly IOpennessService opennessService = opennessService;

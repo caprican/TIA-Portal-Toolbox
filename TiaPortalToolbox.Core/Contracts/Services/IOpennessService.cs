@@ -35,7 +35,7 @@ public interface IOpennessService
 
     public Task OpenOrAttachProjectAsync(Models.TiaProcess? process = null, string? path = null);
     public Task<List<Connexion>> GetCommunDataBlock(string markBlock);
-    public Task<string[]?> ExportAsync(Models.ProjectTree.Object projectItem, string? path = null);
+    public Task<string[]?> ExportAsync(Models.ProjectTree.Object? projectItem, string? path = null);
     internal Task<string[]?> ExportAsync(IEngineeringObject projectItem, string? path = null);
 
     public Task<Models.ProjectTree.Object?> GetItem(string blockName);

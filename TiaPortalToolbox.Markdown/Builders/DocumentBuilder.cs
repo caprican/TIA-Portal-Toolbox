@@ -1,6 +1,6 @@
-﻿using System.Globalization;
-using System.Reflection;
+﻿using System.Reflection;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -8,8 +8,6 @@ using Microsoft.Extensions.Options;
 
 using TiaPortalToolbox.Doc.Contracts.Builders;
 using TiaPortalToolbox.Doc.Contracts.Factories;
-using TiaPortalToolbox.Doc.Helpers;
-using TiaPortalToolbox.Doc.Models;
 
 namespace TiaPortalToolbox.Doc.Builders;
 
@@ -62,80 +60,75 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
         }
     }
 
-    public Task CreateDocument(List<Core.Models.ProjectTree.Object> projetItems, List<Core.Models.ProjectTree.Object> derivedItems, CultureInfo culture, string path)
+    public Task CreateDocument(List<Core.Models.ProjectTree.Object> projetItems, List<Core.Models.ProjectTree.Object> derivedItems)
     {
         var tcs = new TaskCompletionSource<bool>();
         ThreadPool.QueueUserWorkItem(_ =>
         {
             try
             {
-                document = WordprocessingDocument.Create(path, DocumentFormat.OpenXml.WordprocessingDocumentType.Document);
+                if(settings is null)
+                {
+                    return;
+                }
+
+                document = WordprocessingDocument.Create(settings.DocumentPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document);
                 MainDocumentPart mainDocumentPart = document.AddMainDocumentPart();
                 mainDocumentPart.Document = new Document();
 
-                var styles = new DocumentStyles(settings);
-                StyleDefinitionsPart? styleDefinitionsPart = DocumentHelper.AddStylesPartToPackage(document, culture);
-                styleDefinitionsPart?.Styles?.Append(styles.SetDefault());
+                var style = new Models.DocumentStyles();
+                settings.DocumentStyle = style;
+                StyleDefinitionsPart? styleDefinitionsPart = document.AddStylesPartToPackage(settings.Culture);
+                styleDefinitionsPart?.Styles?.Append(style.SetDefault());
 
-                NumberingDefinitionsPart numberingDefinitionsPart = DocumentHelper.AddNumberingDefinitionsPartToPackage(document, culture);
+                NumberingDefinitionsPart numberingDefinitionsPart = document.AddNumberingDefinitionsPartToPackage(settings.Culture);
                 numberingDefinitionsPart.Numbering.SetDefault();
 
                 var body = mainDocumentPart.Document.AppendChild(new Body());
 
                 //if (!string.IsNullOrEmpty(plcItem.Preamble?[culture]))
-                //    body.Append(new Paragraph(new Run(new Text(plcItem.Preamble![culture]!))));
+                //{
+                //    //body.Append(new Paragraph(new Run(new Text(plcItem.Preamble![culture]!))));
+                //    document.MarkdownConvert()
+                //}
 
-                body.Append(new Paragraph(new Run(new Text("Program blocks"))) 
+                var plcBlocks = projetItems.OfType<Core.Models.ProjectTree.Plc.Blocks.Object>();
+                if(plcBlocks.Any())
                 {
-                    ParagraphProperties = new ParagraphProperties
+                    mainDocumentPart.AddParagraph("Program blocks", style.Headings[1]);
+                    foreach (var plcItem in plcBlocks)
                     {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
-                    }
-                });
-                foreach (var plcItem in projetItems.OfType<Core.Models.ProjectTree.Plc.Blocks.Object>())
-                {
-                    var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
-                    if (pageFactory.CreatePage(plcItem, derivedPLcItems)?.Build(culture) is DocumentFormat.OpenXml.OpenXmlElement[] page)
-                    {
-                        body.Append(page);
+                        var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                        pageFactory.CreatePage(document, plcItem, derivedPLcItems)?.Build();
+
+                        body.Append(new Paragraph(new Run(new Break(){ Type = BreakValues.Page })));
                     }
                 }
 
-                body.Append(new Paragraph(new Run(new Text("PLC data types")))
+                var plcUserTypes = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                if (plcUserTypes.Any())
                 {
-                    ParagraphProperties = new ParagraphProperties
+                    mainDocumentPart.AddParagraph("PLC data types", style.Headings[1]);
+                    foreach (var plcItem in plcUserTypes)
                     {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
+                        var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                        pageFactory.CreatePage(document, plcItem, derivedPLcItems)?.Build();
                     }
-                });
-                foreach (var plcItem in projetItems.OfType<Core.Models.ProjectTree.Plc.Type>())
-                {
-                    var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
-                    if (pageFactory.CreatePage(plcItem, derivedPLcItems)?.Build(culture) is DocumentFormat.OpenXml.OpenXmlElement[] page)
-                    {
-                        body.Append(page);
-                    }
+                    body.Append(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
                 }
 
-
-                body.Append(new Paragraph(new Run(new Text("PLC tags & constants")))
+                var plcTags = projetItems.OfType<Core.Models.ProjectTree.Plc.Tag>();
+                if (plcTags.Any())
                 {
-                    ParagraphProperties = new ParagraphProperties
-                    {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading1].Name }
-                    }
-                });
+                    mainDocumentPart.AddParagraph("PLC tags & constants", style.Headings[1]);
+                    pageFactory.CreatePage(document, plcTags, null)?.Build();
+                }
 
                 //if (!string.IsNullOrEmpty(plcItem.Appendix?[culture]))
                 //    body.Append(new Paragraph(new Run(new Text(plcItem.Appendix![culture]!))));
 
-                body.Append(new Paragraph(new Run(new Text("Change log")))
-                {
-                    ParagraphProperties = new ParagraphProperties
-                    {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading2].Name }
-                    }
-                });
+                body.Append(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
+                mainDocumentPart.AddParagraph("Change log", style.Headings[1]);
 
                 tcs.SetResult(false);
             }
@@ -146,16 +139,6 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
         });
         return tcs.Task;
 
-    }
-
-    private Paragraph? FindParagraphContainingText(string text)
-    {
-        if (document?.MainDocumentPart is null || document.MainDocumentPart.Document.Body is null) return null;
-
-        var textElement = document.MainDocumentPart.Document.Body.Descendants<Text>().FirstOrDefault(t => t.Text.Contains(text));
-        if (textElement is null) return null;
-
-        return textElement.Ancestors<Paragraph>().FirstOrDefault();
     }
 
     public void Save()

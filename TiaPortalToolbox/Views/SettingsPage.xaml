@@ -23,6 +23,17 @@
             <StackPanel x:Name="ContentArea" Grid.Row="1" Margin="{StaticResource MediumLeftRightMargin}">
                 <TextBlock Text="{x:Static properties:Resources.SettingsPagePersonalizationTitle}" Margin="{StaticResource SmallTopMargin}"
                            Style="{StaticResource SubtitleTextStyle}"/>
+                <StackPanel Grid.Row="1" Grid.Column="1">
+                    <TextBlock Text="{x:Static properties:Resources.SettingsPageChooseLanguageText}" Style="{StaticResource BodyTextStyle}" />
+                    <ComboBox SelectedItem="{Binding Language}" ItemsSource="{Binding Languages}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
                 <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
                     <TextBlock Text="{x:Static properties:Resources.SettingsPageChooseThemeText}"
                                Style="{StaticResource BodyTextStyle}"/>

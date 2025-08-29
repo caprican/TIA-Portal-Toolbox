@@ -25,6 +25,7 @@ internal enum OpenXmlStyles
     BulletText,
     /// <summary>Resource Key for the CodeStyle.</summary>
     Code,
+    CodeChar,
 
     /// <summary>Resource Key for the ImageStyle.</summary>
     Image,
@@ -68,4 +69,5 @@ internal enum OpenXmlStyles
     ListBullet3,
     ListBullet4,
     ListBullet5,
+
 }

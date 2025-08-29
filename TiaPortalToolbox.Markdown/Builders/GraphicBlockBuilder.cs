@@ -1,27 +1,25 @@
-﻿using System.Data.SqlTypes;
-using System.Globalization;
-
-using DocumentFormat.OpenXml.Drawing.Diagrams;
-using DocumentFormat.OpenXml.Wordprocessing;
-
-using TiaPortalToolbox.Doc.Models;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace TiaPortalToolbox.Doc.Builders;
 
-internal class GraphicBlockBuilder(DocumentSettings settings)
+internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
 {
-    private readonly DocumentSettings settings = settings;
+    private readonly Models.DocumentSettings settings = documentSettings;
 
-    private uint FunctionBlockCenterSize;
+    private uint functionBlockCenterSize;
+    private Models.GraphicBlocStyle? blockStyle;
 
     internal Table BlockDraw(string blockName, bool isSafetyBlock, List<Core.Models.InterfaceMember>? interfaceMember = null)
     {
-        FunctionBlockCenterSize = (uint)settings.TableSize - (2 * (settings.FunctionBlockNameSize + settings.FunctionBlockConnectorSize + settings.FunctionBlockTypeSize));
+        var documentStyle = settings.DocumentStyle as Models.DocumentStyles ?? throw new InvalidOperationException("Document style is not set.");
+        blockStyle = documentStyle.TableStyles["Block"] as Models.GraphicBlocStyle ?? throw new InvalidOperationException("Block style is not set.");
+
+        functionBlockCenterSize = blockStyle.TableSize - (2 * (blockStyle.FunctionBlockNameSize + blockStyle.FunctionBlockConnectorSize + blockStyle.FunctionBlockTypeSize));
         var table = new Table();
         table.Append(new TableProperties
         {
-            TableStyle = new TableStyle { Val = "TableGrid" },
-            TableWidth = new TableWidth { Width = $"{settings.TableSize}", Type = TableWidthUnitValues.Dxa },
+            TableStyle = new TableStyle { Val = blockStyle.StyleName },
+            TableWidth = new TableWidth { Width = $"{blockStyle.TableSize}", Type = TableWidthUnitValues.Dxa },
             TableIndentation = new TableIndentation { Width = 400, Type = TableWidthUnitValues.Dxa },
             TableBorders = new TableBorders
             {
@@ -37,13 +35,13 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
 
         var tableGrid = new TableGrid();
         table.AppendChild(tableGrid);
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockNameSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockConnectorSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockTypeSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{FunctionBlockCenterSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockTypeSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockConnectorSize}" });
-        tableGrid.Append(new GridColumn { Width = $"{settings.FunctionBlockNameSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockNameSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockConnectorSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockTypeSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{functionBlockCenterSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockTypeSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockConnectorSize}" });
+        tableGrid.Append(new GridColumn { Width = $"{blockStyle.FunctionBlockNameSize}" });
 
         table.Append(AddTableFunctionHeader(blockName, isSafetyBlock));
 
@@ -68,7 +66,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockNameSize + settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle!.FunctionBlockNameSize + blockStyle.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 2 },
                 TableCellBorders = new TableCellBorders
                 {
@@ -94,16 +92,16 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.TableSize - (2 * settings.FunctionBlockNameSize)}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle.TableSize - (2 * blockStyle.FunctionBlockNameSize)}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 3 },
                 TableCellBorders = new TableCellBorders
                 {
-                    TopBorder = new TopBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor },
-                    LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor },
-                    BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor },
-                    RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor }
+                    TopBorder = new TopBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor },
+                    LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor },
+                    BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor },
+                    RightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor }
                 },
-                Shading = new Shading { Color = settings.ShadingColor, Fill = IsSafetyBlock ? settings.ShadingFillSafety : settings.ShadingFillHeader, Val = ShadingPatternValues.Clear },
+                Shading = new Shading { Color = blockStyle.ShadingColor, Fill = IsSafetyBlock ? blockStyle.ShadingFillSafety : blockStyle.Header!.ShadingFill, Val = ShadingPatternValues.Clear },
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
         };
@@ -140,7 +138,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockNameSize + settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle.FunctionBlockNameSize + blockStyle.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 2 },
                 TableCellBorders = new TableCellBorders
                 {
@@ -176,7 +174,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockNameSize + settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle!.FunctionBlockNameSize + blockStyle.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 2 },
                 TableCellBorders = new TableCellBorders
                 {
@@ -202,14 +200,14 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.TableSize - (2 * settings.FunctionBlockNameSize)}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle.TableSize - (2 * blockStyle.FunctionBlockNameSize)}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 3 },
                 TableCellBorders = new TableCellBorders
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },
-                    LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor },
-                    BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor },
-                    RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor }
+                    LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor },
+                    BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor },
+                    RightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor }
                 },
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
@@ -229,7 +227,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockNameSize + settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle.FunctionBlockNameSize + blockStyle.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 GridSpan = new GridSpan { Val = 2 },
                 TableCellBorders = new TableCellBorders
                 {
@@ -276,8 +274,8 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
             outputsMembers.AddRange(Enumerable.Repeat(memberEmpty, membersCount - membersStart));
         }
 
-        inputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput));
-        outputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput));
+        inputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput)!);
+        outputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput)!);
 
         for (var i = 0; i < inputsMembers?.Count; i++)
         {
@@ -305,7 +303,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                 bottomRow.Append(cells.BottomCell);
             }
 
-            cells = Center(inputsMembers[i] == outputsMembers[i] ? inputsMembers[i] : memberEmpty);
+            cells = Center(inputsMembers[i] == outputsMembers![i] ? inputsMembers[i] : memberEmpty);
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
 
@@ -331,7 +329,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
 
     private (TableCell TopCell, TableCell BottomCell) MnemonicName(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
     {
-        var shading = member?.Islocked == true ? settings.ShadingFillLock : settings.ShadingFill;
+        var shading = member?.Islocked == true ? blockStyle!.ShadingFillLock : blockStyle!.ShadingFill;
         //var styleId = position == Core.Models.DirectionMember.Input ? "TabelleTextrechts" : "TabelleTextlinks";
 
         var direction = position switch
@@ -341,12 +339,12 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
             _ => JustificationValues.Center
         };
 
-        return Mnemonic($"{settings.FunctionBlockNameSize}", shading, direction, member?.Name ?? string.Empty, member?.HidenInterface == true);
+        return Mnemonic($"{blockStyle.FunctionBlockNameSize}", shading, direction, member?.Name ?? string.Empty, member?.HidenInterface == true);
     }
 
     private (TableCell TopCell, TableCell BottomCell) MnemonicType(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
     {
-        var shading = member?.Islocked == true ? settings.ShadingFillLock : settings.ShadingFill;
+        var shading = member?.Islocked == true ? blockStyle!.ShadingFillLock : blockStyle!.ShadingFill;
         //var styleId = position == Core.Models.DirectionMember.Output ? "TabelleTextrechts" : "TabelleTextlinks";
 
         var direction = position switch
@@ -356,7 +354,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
             _ => JustificationValues.Center
         };
 
-        return Mnemonic($"{settings.FunctionBlockTypeSize}", shading, direction, member?.Direction != Core.Models.DirectionMember.InOutput ? member?.Type ?? string.Empty : string.Empty , member?.HidenInterface == true);
+        return Mnemonic($"{blockStyle.FunctionBlockTypeSize}", shading, direction, member?.Direction != Core.Models.DirectionMember.InOutput ? member?.Type ?? string.Empty : string.Empty , member?.HidenInterface == true);
     }
 
     private (TableCell TopCell, TableCell BottomCell) Connector(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
@@ -368,28 +366,28 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         var bottomRightBorder = new RightBorder { Val = BorderValues.Nil };
         string shading;
 
-        var color = member?.HidenInterface == true ? settings.ColorHidden : settings.BorderColor;
+        var color = member?.HidenInterface == true ? blockStyle!.ColorHidden : blockStyle!.BorderColor;
 
         if (member?.Direction == Core.Models.DirectionMember.Other)
         {
             bottomBorder = new BottomBorder { Val = BorderValues.Nil };
-            shading = settings.ShadingFill;
+            shading = blockStyle.ShadingFill;
         }
         else
         {
-            bottomBorder = new BottomBorder { Val = member?.Direction != Core.Models.DirectionMember.InOutput ? BorderValues.Single : BorderValues.Dashed, Space = settings.BorderSpace, Size = settings.BorderSize, Color = color };
-            shading = member.Islocked ? settings.ShadingFillLock : settings.ShadingFill;
+            bottomBorder = new BottomBorder { Val = member?.Direction != Core.Models.DirectionMember.InOutput ? BorderValues.Single : BorderValues.Dashed, Space = blockStyle.BorderSpace, Size = blockStyle.BorderSize, Color = color };
+            shading = member?.Islocked == true ? blockStyle.ShadingFillLock : blockStyle.ShadingFill;
         }
 
         switch (position)
         {
             case Core.Models.DirectionMember.Input:
-                topRightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor };
-                bottomRightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor };
+                topRightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor };
+                bottomRightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor };
                 break;
             case Core.Models.DirectionMember.Output:
-                topLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor };
-                bottomLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderHeaderSize, Color = settings.BorderColor };
+                topLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor };
+                bottomLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor };
                 break;
         }
 
@@ -397,7 +395,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle!.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 TableCellBorders = new TableCellBorders
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },
@@ -405,7 +403,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                     BottomBorder = bottomBorder,
                     RightBorder = topRightBorder
                 },
-                Shading = new Shading { Color = settings.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear }
+                Shading = new Shading { Color = blockStyle.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear }
             }
         };
         topCell.Append(new Paragraph
@@ -422,7 +420,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
         {
             TableCellProperties = new TableCellProperties
             {
-                TableCellWidth = new TableCellWidth { Width = $"{settings.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
+                TableCellWidth = new TableCellWidth { Width = $"{blockStyle.FunctionBlockConnectorSize}", Type = TableWidthUnitValues.Dxa },
                 TableCellBorders = new TableCellBorders
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },
@@ -430,7 +428,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                     BottomBorder = new BottomBorder { Val = BorderValues.Nil },
                     RightBorder = bottomRightBorder
                 },
-                Shading = new Shading { Color = settings.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear }
+                Shading = new Shading { Color = blockStyle.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear }
             }
         };
         bottomCell.Append(new Paragraph
@@ -449,7 +447,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
     private (TableCell TopCell, TableCell BottomCell) Center(Core.Models.InterfaceMember member)
     {
         var isIO = member?.Direction == Core.Models.DirectionMember.InOutput;
-        var cellWidth = $"{FunctionBlockCenterSize + (Convert.ToInt16(isIO) * (2 * settings.FunctionBlockTypeSize))}";
+        var cellWidth = $"{functionBlockCenterSize + (Convert.ToInt16(isIO) * (2 * blockStyle!.FunctionBlockTypeSize))}";
         var topCell = new TableCell()
         {
             TableCellProperties = new TableCellProperties
@@ -460,7 +458,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },
                     LeftBorder = new LeftBorder { Val = BorderValues.Nil },
-                    BottomBorder = !isIO ? new BottomBorder { Val = BorderValues.Nil } : new BottomBorder { Val = BorderValues.Dashed, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
+                    BottomBorder = !isIO ? new BottomBorder { Val = BorderValues.Nil } : new BottomBorder { Val = BorderValues.Dashed, Space = blockStyle.BorderSpace, Size = blockStyle.BorderSize, Color = blockStyle.BorderColor },
                     RightBorder = new RightBorder { Val = BorderValues.Nil }
                 },
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Bottom }
@@ -555,7 +553,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                     BottomBorder = new BottomBorder { Val = BorderValues.Nil },
                     RightBorder = new RightBorder { Val = BorderValues.Nil }
                 },
-                Shading = new Shading { Color = settings.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear },
+                Shading = new Shading { Color = blockStyle!.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear },
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
         };
@@ -582,7 +580,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                     RunFonts = new RunFonts { Ascii = "Consolas" },
                     FontSize = new FontSize { Val = "16" },
                     NoProof = new NoProof(),
-                    Color = new Color { Val = hidden ? settings.ColorHidden : "Auto" }
+                    Color = new Color { Val = hidden ? blockStyle.ColorHidden : "Auto" }
                 }
             });
         }
@@ -602,7 +600,7 @@ internal class GraphicBlockBuilder(DocumentSettings settings)
                     BottomBorder = new BottomBorder { Val = BorderValues.Nil },
                     RightBorder = new RightBorder { Val = BorderValues.Nil }
                 },
-                Shading = new Shading { Color = settings.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear },
+                Shading = new Shading { Color = blockStyle.ShadingColor, Fill = shading, Val = ShadingPatternValues.Clear },
             }
         };
         bottomCell.Append(new Paragraph

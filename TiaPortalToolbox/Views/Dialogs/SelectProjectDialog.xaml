@@ -12,14 +12,20 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ListBox ItemsSource="{Binding Processes}" DisplayMemberPath="{Binding ProjectName}" SelectedItem="{Binding SelectedProcess}"/>
+        <ListBox ItemsSource="{Binding Processes}"  SelectedItem="{Binding SelectedProcess}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding ProjectName}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <UniformGrid Grid.Row="1" Rows="1">
 
             <Button Margin="{StaticResource SmallLeftRightMargin}" Command="{Binding AttachCommand}" 
-                    Content="{x:Static properties:Resources.SelectProjectDialogAttachButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs}"/>
+                    Content="{x:Static properties:Resources.SelectProjectDialogAttachButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs.Accent}"/>
 
             <Button Margin="{StaticResource SmallLeftRightMargin}" Command="{Binding CloseCommand}" 
-                    Content="{x:Static properties:Resources.SelectProjectDialogCancelButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs.Accent}"/>
+                    Content="{x:Static properties:Resources.SelectProjectDialogCancelButtonText}" Style="{DynamicResource MahApps.Styles.Button.Dialogs}"/>
         </UniformGrid>
     </Grid>
 </UserControl>

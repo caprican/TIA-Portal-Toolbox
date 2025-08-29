@@ -76,7 +76,7 @@ public class OpennessService : Contracts.Services.IOpennessService
 
     public void Close()
     {
-        if (tiaPortal != null)
+        if (tiaPortal is not null)
         {
             tiaPortal.Confirmation -= TiaPortal_Confirmation;
             tiaPortal.Authentication -= TiaPortal_Authentication;
@@ -138,7 +138,7 @@ public class OpennessService : Contracts.Services.IOpennessService
 
                 if (process is null)
                 {
-                    var tiaPortal = new TiaPortal(TiaPortalMode.WithUserInterface);
+                    tiaPortal = new TiaPortal(TiaPortalMode.WithUserInterface);
 
                     if(!string.IsNullOrEmpty(path))
                     {
@@ -446,7 +446,7 @@ public class OpennessService : Contracts.Services.IOpennessService
         return result;
     }
 
-    public Task<string[]?> ExportAsync(Models.ProjectTree.Object projectItem, string? path = null)
+    public Task<string[]?> ExportAsync(Models.ProjectTree.Object? projectItem, string? path = null)
     {
         var tcs = new TaskCompletionSource<string[]?>();
         ThreadPool.QueueUserWorkItem(_ =>
@@ -459,7 +459,7 @@ public class OpennessService : Contracts.Services.IOpennessService
                     path = ExportFolder;
                 }
 
-                var exportPath = new FileInfo(Path.Combine(path, $"{projectItem.Name}.xml"));
+                var exportPath = new FileInfo(Path.Combine(path, $"{projectItem?.Name ?? "Unknow"}.xml"));
                 if (!Directory.Exists(exportPath.DirectoryName))
                 {
                     Directory.CreateDirectory(exportPath.DirectoryName);
@@ -473,8 +473,15 @@ public class OpennessService : Contracts.Services.IOpennessService
                 switch (projectItem)
                 {
                     case Models.ProjectTree.Plc.Blocks.Object plcBlock:
-                        plcBlock.PlcBlock?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
-                        exportedPaths.Add(exportPath.FullName);
+                        if(plcBlock.PlcBlock?.IsConsistent == true)
+                        { 
+                            plcBlock.PlcBlock?.Export(exportPath, ExportOptions.WithDefaults, DocumentInfoOptions.None);
+                            exportedPaths.Add(exportPath.FullName);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"The block {plcBlock.Name} is not consistent and cannot be exported.");
+                        }
                         break;
                     case Models.ProjectTree.Plc.Item plcItem:
                         if (plcItem.Items?.Count > 0)
@@ -486,11 +493,11 @@ public class OpennessService : Contracts.Services.IOpennessService
                         }
                         break;
                     case Models.ProjectTree.Plc.Type plcType:
-                        plcType.PlcType?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
+                        plcType.PlcType?.Export(exportPath, ExportOptions.WithDefaults, DocumentInfoOptions.None);
                         exportedPaths.Add(exportPath.FullName);
                         break;
                     case Models.ProjectTree.Plc.Tag plcTag:
-                        plcTag.TagTable?.Export(exportPath, ExportOptions.None, DocumentInfoOptions.None);
+                        plcTag.TagTable?.Export(exportPath, ExportOptions.WithDefaults, DocumentInfoOptions.None);
                         exportedPaths.Add(exportPath.FullName);
                         break;
                 }

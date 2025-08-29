@@ -70,7 +70,7 @@
                 <!--Backstage-->
                 <Fluent:Ribbon.Menu>
                     <Fluent:Backstage UseHighestAvailableAdornerLayer="False">
-                        <Fluent:BackstageTabControl x:Name="backstageTabControl" SelectedContentMargin="0">
+                        <Fluent:BackstageTabControl x:Name="backstageTabControl">
                             <i:Interaction.Behaviors>
                                 <behaviors:BackstageTabNavigationBehavior x:Name="navigationBehavior" />
                             </i:Interaction.Behaviors>

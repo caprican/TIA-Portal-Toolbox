@@ -70,11 +70,173 @@ namespace TiaPortalToolbox.Properties {
         }
         
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à Author.
+        /// </summary>
+        public static string DocumentPageAuthorColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageAuthorColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Author: .
+        /// </summary>
+        public static string DocumentPageAuthorText {
+            get {
+                return ResourceManager.GetString("DocumentPageAuthorText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Default value.
+        /// </summary>
+        public static string DocumentPageDefaultValueColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageDefaultValueColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Description.
+        /// </summary>
+        public static string DocumentPageDescriptionColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageDescriptionColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Edited.
+        /// </summary>
+        public static string DocumentPageEditedColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageEditedColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Family: .
+        /// </summary>
+        public static string DocumentPageFamilyText {
+            get {
+                return ResourceManager.GetString("DocumentPageFamilyText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Interface.
+        /// </summary>
+        public static string DocumentPageInterfaceExpandeHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageInterfaceExpandeHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Library: .
+        /// </summary>
+        public static string DocumentPageLibraryText {
+            get {
+                return ResourceManager.GetString("DocumentPageLibraryText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Loading PLC blocks.
+        /// </summary>
+        public static string DocumentPageLoadTitle {
+            get {
+                return ResourceManager.GetString("DocumentPageLoadTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Log.
+        /// </summary>
+        public static string DocumentPageLogExpandeHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageLogExpandeHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Name.
+        /// </summary>
+        public static string DocumentPageNameColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageNameColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Build document.
+        /// </summary>
+        public static string DocumentPageRibbonTabBuildDocumentHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageRibbonTabBuildDocumentHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Documents.
+        /// </summary>
+        public static string DocumentPageRibbonTabHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageRibbonTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Type.
+        /// </summary>
+        public static string DocumentPageTypeColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageTypeColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Version.
+        /// </summary>
+        public static string DocumentPageVersionColumnHeader {
+            get {
+                return ResourceManager.GetString("DocumentPageVersionColumnHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Documents.
+        /// </summary>
+        public static string MainPageDocumentTitle {
+            get {
+                return ResourceManager.GetString("MainPageDocumentTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à HMI Alarms.
         /// </summary>
         public static string MainPageHmiAlarmTitle {
             get {
                 return ResourceManager.GetString("MainPageHmiAlarmTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Open exist project.
+        /// </summary>
+        public static string NoProjectPageOpenTitle {
+            get {
+                return ResourceManager.GetString("NoProjectPageOpenTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Select projet openned.
+        /// </summary>
+        public static string NoProjectPageSelectTitle {
+            get {
+                return ResourceManager.GetString("NoProjectPageSelectTitle", resourceCulture);
             }
         }
         
@@ -160,6 +322,15 @@ namespace TiaPortalToolbox.Properties {
         }
         
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à Export of the PLC block.
+        /// </summary>
+        public static string ProgressDialogExportHeader {
+            get {
+                return ResourceManager.GetString("ProgressDialogExportHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à Attach.
         /// </summary>
         public static string SelectProjectDialogAttachButtonText {
@@ -201,6 +372,15 @@ namespace TiaPortalToolbox.Properties {
         public static string SettingsPageAboutTitle {
             get {
                 return ResourceManager.GetString("SettingsPageAboutTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Choose language.
+        /// </summary>
+        public static string SettingsPageChooseLanguageText {
+            get {
+                return ResourceManager.GetString("SettingsPageChooseLanguageText", resourceCulture);
             }
         }
         

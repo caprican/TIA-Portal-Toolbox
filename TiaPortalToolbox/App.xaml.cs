@@ -11,8 +11,6 @@ using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Core.Services;
-using TiaPortalToolbox.Doc.Builders;
-using TiaPortalToolbox.Doc.Contracts.Builders;
 using TiaPortalToolbox.Models;
 using TiaPortalToolbox.Services;
 using TiaPortalToolbox.ViewModels;
@@ -77,6 +75,14 @@ public partial class App : Application
         services.AddSingleton<INavigationService, NavigationService>();
         //services.AddSingleton<ISampleDataService, SampleDataService>();
 
+        // Factories
+        services.AddTransient<Doc.Contracts.Factories.IPageFactory, Doc.Factories.PageFactory>();
+        //services.AddTransient<Core.Contracts.Factories.IPageFactory, Core.Factories.PageFactory>();
+
+        // Builders
+        services.AddTransient<Doc.Contracts.Builders.IDocumentBuilder, Doc.Builders.DocumentBuilder>();
+        //services.AddTransient<Core.Contracts.Builders.IDocumentBuilder, Core.Builders.DocumentBuilder>();
+
         // Views and ViewModels
         services.AddSingleton<IShellWindow, ShellWindow>();
         services.AddSingleton<ShellViewModel>();
@@ -111,10 +117,6 @@ public partial class App : Application
         services.AddTransient<IPlcService, PlcService>();
         services.AddTransient<IHmiService, HmiService>();
         services.AddTransient<IUnifiedService, UnifiedService>();
-
-        services.AddTransient<IDocumentBuilder, DocumentBuilder>();
-        services.AddTransient<Doc.Contracts.Factories.IPageFactory, Doc.Factories.PageFactory>();
-
     }
 
     private async void OnExit(object sender, ExitEventArgs e)

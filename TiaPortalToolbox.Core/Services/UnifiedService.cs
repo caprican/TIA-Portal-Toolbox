@@ -121,7 +121,7 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
 
     }
 
-    private List<InterfaceMember> GetInterfaceMember(SimaticML.SW.InterfaceSections.IMember_T member, string parent = "")
+    private List<InterfaceMember> GetInterfaceMember(SimaticML.SW.InterfaceSections.IMember member, string parent = "")
     {
         var tags = new List<InterfaceMember>();
         var subTags = new List<InterfaceMember>();
@@ -137,14 +137,14 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
         {
             switch (item)
             {
-                case SimaticML.SW.InterfaceSections.ISections_T sectionItem:
+                case SimaticML.SW.InterfaceSections.ISections sectionItem:
                     break;
-                case SimaticML.SW.InterfaceSections.IMember_T memberItem:
+                case SimaticML.SW.InterfaceSections.IMember memberItem:
                     subTags.AddRange(GetInterfaceMember(memberItem, tag.Name));
                     break;
-                case SimaticML.SW.InterfaceSections.IStartValue_T startValue:
+                case SimaticML.SW.InterfaceSections.IStartValue startValue:
                     break;
-                case SimaticML.SW.InterfaceSections.ISubelement_T subelement:
+                case SimaticML.SW.InterfaceSections.ISubelement subelement:
                     break;
             }
         }

@@ -1,19 +1,23 @@
-﻿using System.Globalization;
-
-using DocumentFormat.OpenXml;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+
+using Markdig;
 
 using Microsoft.Extensions.Options;
 
 using TiaPortalToolbox.Doc.Contracts.Builders;
 
+using static DocumentFormat.OpenXml.Wordprocessing.TableExtensions;
+
 namespace TiaPortalToolbox.Doc.Builders;
 
-public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Core.Models.ProjectTree.Plc.Blocks.Object plcItem, IEnumerable<Core.Models.ProjectTree.Plc.Object> derivedItems) : IPageBuilder
+public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, WordprocessingDocument document
+                                , Core.Models.ProjectTree.Plc.Blocks.Object plcItem, IEnumerable<Core.Models.ProjectTree.Plc.Object> derivedItems) : IPageBuilder
 {
     private readonly Models.DocumentSettings settings = settings.Value;
-
-    private int DescriptionColumnSize;// = 5771;
+    private readonly WordprocessingDocument document = document;
+    private Markdig.Renderers.Docx.Contracts.IDocumentStyle documentStyle => settings.DocumentStyle;
 
     internal readonly int TableSize = 8607;
 
@@ -21,33 +25,31 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
     private readonly int VersionColumnSize = 1250;
     private readonly int DescriptionComulnSize = 6857;
 
-    public OpenXmlElement[] Build(CultureInfo culture)
+    public void Build()
     {
-        culture ??= CultureInfo.InvariantCulture;
         List<Core.Models.ProjectTree.Plc.Object> functionUserDefines = [];
-        var body = new List<OpenXmlElement>();
 
-        body.Add(new Paragraph(new Run(new Text(plcItem.Name)))
+        document.BodyAppend(new Paragraph(new Run(new Text(plcItem.Name)))
         {
             ParagraphProperties = new ParagraphProperties
             {
-                ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.Heading3].Name }
+                ParagraphStyleId = new ParagraphStyleId { Val = settings.DocumentStyle.Headings[3] }
             }
         });
 
-        if (!string.IsNullOrEmpty(plcItem.Author?[culture]))
+        if (!string.IsNullOrEmpty(plcItem.Author?[settings.Culture]))
         {
-            body.Add(new Paragraph(new Run(new Text($"Author : {plcItem.Author![culture]}"))
+            document.BodyAppend(new Paragraph(new Run(new Text($"Author : {plcItem.Author![settings.Culture]}"))
             {
                 RunProperties = new RunProperties
                 {
                     FontSize = new FontSize { Val = "16" }
                 }
-            }) 
+            })
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockText].Name },
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockText"] },
                     //ParagraphStyleId = new ParagraphStyleId { Val = "Blocktext" },
                     //SpacingBetweenLines = new SpacingBetweenLines { Before = "0", After = "0" },
                     //Indentation = new Indentation { Left = "1200" },
@@ -57,49 +59,49 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
             });
         }
 
-        if (!string.IsNullOrEmpty(plcItem.Function?[culture]))
+        if (!string.IsNullOrEmpty(plcItem.Function?[settings.Culture]))
         {
-            body.Add(new Paragraph(new Run(new Text("Short description")))
+            document.BodyAppend(new Paragraph(new Run(new Text("Short description")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
                 }
             });
-            if(Helpers.DocumentHelper.MarkdownToParagraph(plcItem.Function![culture]) is IEnumerable<OpenXmlElement> xElements)
-            {
-                body.AddRange(xElements);
-            }
+
+            document.MarkdownConvert(settings, plcItem.Function![settings.Culture]);
         }
 
-        body.Add(new Paragraph(new Run(new Text("Interface description")))
+        document.BodyAppend(new Paragraph(new Run(new Text("Interface description")))
         {
             ParagraphProperties = new ParagraphProperties
             {
-                ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
             }
         });
-        body.Add(new Paragraph(new Run(new Text("Block interface")))
+        document.BodyAppend(new Paragraph(new Run(new Text("Block interface")))
         {
             ParagraphProperties = new ParagraphProperties
             {
-                ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
             }
         });
         var blockDraw = new GraphicBlockBuilder(settings);
-        body.Add(blockDraw.BlockDraw(plcItem.DisplayName ?? plcItem.Name, plcItem.IsSafetyBlock, plcItem.Members?[culture]));
+        document.BodyAppend(blockDraw.BlockDraw(plcItem.DisplayName ?? plcItem.Name, plcItem.IsSafetyBlock, plcItem.Members?[settings.Culture]));
 
-        var inputMember = plcItem.Members?[culture].Where(member => member.Direction == Core.Models.DirectionMember.Input);
+        var inputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Input);
         if (inputMember.Any())
         {
-            body.Add(new Paragraph(new Run(new Text("Input parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text("Input parameter")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] },
+                    KeepNext = new KeepNext(),
+                    KeepLines = new KeepLines(),
                 }
             });
-            body.Add(GenerateTableParameter(inputMember!, culture));
+            GenerateTableParameter(inputMember!);
 
             inputMember.ToList().ForEach(member =>
             {
@@ -110,17 +112,19 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
             });
         }
 
-        var outputMember = plcItem.Members?[culture].Where(member => member.Direction == Core.Models.DirectionMember.Output);
-        if (outputMember.Any())
+        var outputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Output);
+        if (outputMember?.Count() > 0)
         {
-            body.Add(new Paragraph(new Run(new Text("Output parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text("Output parameter")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] },
+                    KeepNext = new KeepNext(),
+                    KeepLines = new KeepLines(),
                 }
             });
-            body.Add(GenerateTableParameter(outputMember!, culture));
+            GenerateTableParameter(outputMember!);
 
             outputMember.ToList().ForEach(member =>
             {
@@ -131,17 +135,19 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
             });
         }
 
-        var inoutputMember = plcItem.Members?[culture].Where(member => member.Direction == Core.Models.DirectionMember.InOutput);
-        if (inoutputMember.Any())
+        var inoutputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.InOutput);
+        if (inoutputMember?.Count() > 0)
         {
-            body.Add(new Paragraph(new Run(new Text("In/Out parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text("In/Out parameter")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] },
+                    KeepNext = new KeepNext(),
+                    KeepLines = new KeepLines(),
                 }
             });
-            body.Add(GenerateTableParameter(inoutputMember!, culture));
+            GenerateTableParameter(inoutputMember!);
 
             inoutputMember.ToList().ForEach(member =>
             {
@@ -152,17 +158,19 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
             });
         }
 
-        var staticMember = plcItem.Members?[culture].Where(member => member.Direction == Core.Models.DirectionMember.Static);
-        if (staticMember.Any())
+        var staticMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Static);
+        if (staticMember?.Count() > 0)
         {
-            body.Add(new Paragraph(new Run(new Text("Statics parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text("Statics parameter")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] },
+                    KeepNext = new KeepNext(),
+                    KeepLines = new KeepLines(),
                 }
             });
-            body.Add(GenerateTableParameter(staticMember!, culture));
+            GenerateTableParameter(staticMember!);
 
             staticMember.ToList().ForEach(member =>
             {
@@ -175,216 +183,222 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
 
         if (functionUserDefines.Count > 0)
         {
-            body.Add(new Paragraph(new Run(new Text("User defined datatype(s)")))
+            document.BodyAppend(new Paragraph(new Run(new Text("User defined datatype(s)")))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
                 }
             });
-
-            body.AddRange(AddUserDefineType(functionUserDefines.OfType<Core.Models.ProjectTree.Plc.Type>(), culture));
-        }
-
-        if (!string.IsNullOrEmpty(plcItem.Descriptions?[culture]))
-        {
-            body.Add(new Paragraph(new Run(new Text("Functional description")))
+            var chapterBuilder = new UserDatatypeChapter(settings, document);
+            foreach (var userDefineType in functionUserDefines.OfType<Core.Models.ProjectTree.Plc.Type>())
             {
-                ParagraphProperties = new ParagraphProperties
+                var paragraph = new Paragraph
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
-                }
-            });
-            if (Helpers.DocumentHelper.MarkdownToParagraph(plcItem.Descriptions![culture]) is IEnumerable<OpenXmlElement> xElements)
-            {
-                body.AddRange(xElements);
-            }
-        }
-
-        if (plcItem.Logs?[culture] is not null)
-        {
-            body.Add(new Paragraph(new Run(new Text("Change log")))
-            {
-                ParagraphProperties = new ParagraphProperties
-                {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
-                }
-            });
-            body.Add(GenerateTableLog(plcItem.Logs[culture]));
-        }
-
-        return [.. body];
-    }
-
-    private Table GenerateTableParameter(IEnumerable<Core.Models.InterfaceMember> members, CultureInfo culture)
-    {
-        var _asDefaultValue = members.Any(member => !string.IsNullOrEmpty(member.DefaultValue));
-
-        DescriptionColumnSize = TableSize - settings.IdentifierColumnSize - settings.DataTypeColumnSize - (_asDefaultValue ? settings.DefaultValueColumnSize : 0);
-
-        var columns = new List<int> { settings.IdentifierColumnSize, settings.DataTypeColumnSize };
-        var headerColumns = new List<Models.TableHeader>
-            {
-                new("Identifier", settings.IdentifierColumnSize),
-                new("Data type", settings.DataTypeColumnSize)
-            };
-        if (_asDefaultValue)
-        {
-            columns.Add(settings.DefaultValueColumnSize);
-            headerColumns.Add(new Models.TableHeader("Default value", settings.DefaultValueColumnSize));
-        }
-        columns.Add(DescriptionColumnSize);
-        headerColumns.Add(new Models.TableHeader("Description", DescriptionColumnSize));
-
-        var table = Helpers.DocumentHelper.CreateTable(TableSize, 113, columns);
-        table.Append(Helpers.DocumentHelper.CreateHeaderTable(headerColumns, settings));
-
-        foreach (var member in members)
-        {
-            var tableRow = new TableRow
-            {
-                TableRowProperties = new TableRowProperties(new CantSplit())
-            };
-
-            var tableCell = new TableCell
-            {
-                TableCellProperties = new TableCellProperties
-                {
-                    TableCellWidth = new TableCellWidth { Width = $"{settings.IdentifierColumnSize}", Type = TableWidthUnitValues.Dxa },
-                    Shading = new Shading { Color = settings.ShadingColor, Fill = member.Islocked ? settings.ShadingFillLock : settings.ShadingFill, Val = ShadingPatternValues.Clear }
-                }
-            };
-            var paragraph = new Paragraph(new Run(new Text(member.Name!))
-            {
-                RunProperties = new RunProperties
-                {
-                    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                }
-            })
-            {
-                ParagraphProperties = new ParagraphProperties
-                {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
-                    //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
-                }
-            };
-            tableCell.Append(paragraph);
-            tableRow.Append(tableCell);
-
-            tableCell = new TableCell
-            {
-                TableCellProperties = new TableCellProperties
-                {
-                    TableCellWidth = new TableCellWidth { Width = $"{settings.DataTypeColumnSize}", Type = TableWidthUnitValues.Auto },
-                    Shading = new Shading { Color = settings.ShadingColor, Fill = member.Islocked ? settings.ShadingFillLock : settings.ShadingFill, Val = ShadingPatternValues.Clear }
-                }
-            };
-            paragraph = new Paragraph(new Run(new Text(member.Type!))
-            {
-                RunProperties = new RunProperties
-                {
-                    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                }
-            })
-            {
-                ParagraphProperties = new ParagraphProperties
-                {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
-                    //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
-                }
-            };
-            tableCell.Append(paragraph);
-            tableRow.Append(tableCell);
-
-            if (_asDefaultValue)
-            {
-                tableCell = new TableCell
-                {
-                    TableCellProperties = new TableCellProperties
+                    ParagraphProperties = new ParagraphProperties
                     {
-                        TableCellWidth = new TableCellWidth { Width = $"{settings.DefaultValueColumnSize}", Type = TableWidthUnitValues.Dxa },
-                        Shading = new Shading { Color = settings.ShadingColor, Fill = member.Islocked ? settings.ShadingFillLock : settings.ShadingFill, Val = ShadingPatternValues.Clear }
+                        ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] },
                     }
                 };
-                paragraph = new Paragraph(new Run(new Text(member.DefaultValue))
+                paragraph.Append(new Run(new Text($"{userDefineType.Name} ("))
                 {
                     RunProperties = new RunProperties
                     {
                         NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
                     }
-                })
+                });
+
+                if (userDefineType.IsSafetyBlock)
                 {
-                    ParagraphProperties = new ParagraphProperties
+                    paragraph.Append(new Run(new Text($"SafetyUDT"))
                     {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextCenter].Name },
-                        //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
+                        RunProperties = new RunProperties
+                        {
+                            Shading = new Shading { Color = "auto", Fill = "FFFF33", Val = ShadingPatternValues.Clear },
+                            NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
+                        }
+                    });
+                }
+                else
+                {
+                    paragraph.Append(new Run(new Text($"UDT"))
+                    {
+                        RunProperties = new RunProperties
+                        {
+                            NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
+                        }
+                    });
+                }
+
+                if (!string.IsNullOrEmpty(userDefineType.Version))
+                {
+                    paragraph.Append(new Run(new Text($" / V{userDefineType.Version}") { Space = SpaceProcessingModeValues.Preserve })
+                    {
+                        RunProperties = new RunProperties
+                        {
+                            NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
+                        }
+                    });
+                }
+
+                paragraph.Append(new Run(new Text(")") { Space = SpaceProcessingModeValues.Preserve })
+                {
+                    RunProperties = new RunProperties
+                    {
+                        NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
                     }
-                };
-                tableCell.Append(paragraph);
-                tableRow.Append(tableCell);
+                });
+                document.BodyAppend(paragraph);
+
+                chapterBuilder.Build(userDefineType);
             }
+        }
 
-            tableCell = new TableCell
+        if (!string.IsNullOrEmpty(plcItem.Descriptions?[settings.Culture]))
+        {
+            document.BodyAppend(new Paragraph(new Run(new Text("Functional description")))
             {
-                TableCellProperties = new TableCellProperties
+                ParagraphProperties = new ParagraphProperties
                 {
-                    TableCellWidth = new TableCellWidth { Width = $"{DescriptionColumnSize}", Type = TableWidthUnitValues.Dxa },
-                    Shading = new Shading { Color = settings.ShadingColor, Fill = member.Islocked ? settings.ShadingFillLock : settings.ShadingFill, Val = ShadingPatternValues.Clear }
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
                 }
-            };
-            //paragraph = new Paragraph
-            //{
-            //    ParagraphProperties = new ParagraphProperties
-            //    {
-            //        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
-            //        //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
-            //    }
-            //};
+            });
+            document.MarkdownConvert(settings, plcItem.Descriptions![settings.Culture]);
+        }
 
-            //if (!string.IsNullOrEmpty(member.Descriptions?[culture]))
-            //{
-            //    paragraph.Append(new Run(new Text(member.Descriptions![culture])));
-            //}
-
-            //tableCell.Append(paragraph);
-            if (!string.IsNullOrEmpty(member.Descriptions?[culture]))
+        if (plcItem.Logs?[settings.Culture] is not null)
+        {
+            document.BodyAppend(new Paragraph(new Run(new Text("Change log")))
             {
-                if (Helpers.DocumentHelper.MarkdownToParagraph(member.Descriptions![culture]) is IEnumerable<OpenXmlElement> xElements)
+                ParagraphProperties = new ParagraphProperties
                 {
-                    tableCell.Append(xElements);
+                    ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
                 }
+            });
+            GenerateTableLog(plcItem.Logs[settings.Culture]);
+        }
+    }
+
+    private void GenerateTableParameter(IEnumerable<Core.Models.InterfaceMember> members)
+    {
+        var _asDefaultValue = members.Any(member => !string.IsNullOrEmpty(member.DefaultValue));
+
+        var markdownTable = $"Identifier | Data type{(_asDefaultValue ? " | Default value " : " ")}| Description\n --- | --- | {(_asDefaultValue ? "-- | " : "")}--- |\n";
+
+        foreach (var member in members)
+        {
+            if (member.Descriptions?.ContainsKey(settings.Culture) == true)
+            {
+                markdownTable += $"{member.Name} | {member.Type}{(_asDefaultValue ? $" | {member.DefaultValue} " : " ")} | {member.Descriptions?[settings.Culture] ?? string.Empty} | \n";
             }
             else
             {
-                tableCell.Append(new Paragraph
-                {
-                    ParagraphProperties = new ParagraphProperties
-                    {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
-                        KeepNext = new KeepNext()
-                    }
-                });
+                markdownTable += $"{member.Name} | {member.Type}{(_asDefaultValue ? $" | {member.DefaultValue} " : " ")} | | \n";
             }
-
-            tableRow.Append(tableCell);
-
-            table.Append(tableRow);
         }
+        markdownTable = markdownTable.RemoveLast(1);
 
-        return table;
+        var renderer = new Markdig.Renderers.Docx.DocxDocumentRenderer(document, settings.DocumentStyle)
+        {
+            ImagesBaseUri = settings.UserFolderPath,
+            LinksBaseUri = "",
+            SkipImages = false,
+        };
+        renderer.ObjectRenderers.RemoveAll(r => r.GetType() == typeof(Markdig.Renderers.Docx.Extensions.TableRenderer));
+        renderer.ObjectRenderers.Add(new Renderers.IoTableRenderer());
+
+        var pipeline = new Markdig.MarkdownPipelineBuilder().UseAdvancedExtensions()
+                                                    .UseEmojiAndSmiley()
+                                                    .Build();
+
+        var markdownDocument = Markdig.Markdown.Parse(markdownTable, pipeline);
+
+        renderer.Render(markdownDocument);
     }
 
-    private Table GenerateTableLog(List<Core.Models.PlcBlockLog> logs)
+    private void GenerateTableLog(List<Core.Models.PlcBlockLog> logs)
     {
+        var tableStyle = settings.DocumentStyle.TableStyles["LogTable"] as Markdig.Renderers.Docx.DocumentStyleTable;
         var columns = new List<int> { WhiteColumnSize, VersionColumnSize, DescriptionComulnSize };
-        var headerColumns = new List<Models.TableHeader>
-            {
-                new("Version & Date", settings.IdentifierColumnSize, 2),
-                new("Change description", settings.DataTypeColumnSize)
-            };
 
-        var table = Helpers.DocumentHelper.CreateTable(TableSize, 113, columns);
-        table.Append(Helpers.DocumentHelper.CreateHeaderTable(headerColumns, settings));
+        var table = new Table().CreateTable(columns, styleName:tableStyle!.StyleName, indentation:113 );
+
+        //table.Append( new TableRow(new TableCell(new Paragraph(new Run(new Text("Version & Date")))
+        //{
+        //    ParagraphProperties = new ParagraphProperties
+        //    {
+        //        ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft }
+        //    }
+        //})
+        //{
+        //    TableCellProperties = new TableCellProperties
+        //    {
+        //        TableCellWidth = new TableCellWidth { Width = $"{settings.IdentifierColumnSize}", Type = TableWidthUnitValues.Dxa },
+        //        GridSpan = new GridSpan { Val = 2 },
+        //        TableCellBorders = new TableCellBorders
+        //        {
+        //            BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.Header!.BorderSize, Color = tableStyle.BorderColor }
+        //        },
+        //        Shading = new Shading { Color = tableStyle.ShadingColor, Fill = tableStyle.Header.ShadingFill, Val = ShadingPatternValues.Clear },
+        //        NoWrap = new NoWrap(),
+        //        TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
+        //    }
+        //},
+        //new TableCell(new Paragraph(new Run(new Text("Change description")))
+        //{
+        //    ParagraphProperties = new ParagraphProperties
+        //    {
+        //        ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft }
+        //    }
+        //})
+        //{
+        //    TableCellProperties = new TableCellProperties
+        //    {
+        //        TableCellWidth = new TableCellWidth { Width = $"{settings.DataTypeColumnSize}", Type = TableWidthUnitValues.Dxa },
+        //        TableCellBorders = new TableCellBorders
+        //        {
+        //            BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.Header!.BorderSize, Color = tableStyle.BorderColor }
+        //        },
+        //        Shading = new Shading { Color = tableStyle.ShadingColor, Fill = tableStyle.Header.ShadingFill, Val = ShadingPatternValues.Clear },
+        //        NoWrap = new NoWrap(),
+        //        TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
+        //    }
+        //})
+        //{
+        //    TableRowProperties = new TableRowProperties(new CantSplit(), new DocumentFormat.OpenXml.Wordprocessing.TableHeader())
+        //});
+
+        table.BuildHeader(
+        [
+            new HeaderDefine
+            {
+                Title = "Version & Date",
+                Width = (uint)settings.IdentifierColumnSize,
+                GridSpan = 2,
+                StyleName = tableStyle.StyleTextLeft,
+                BottomBorder = new BorderStyle
+                {
+                    Color = tableStyle.BorderColor,
+                    Space = tableStyle.BorderSpace,
+                    Size = tableStyle.Header!.BorderSize
+                },
+                ShadingColor = tableStyle.ShadingColor,
+                ShadingFill = tableStyle.Header.ShadingFill
+            },
+            new HeaderDefine
+            {
+                Title = "Change description",
+                StyleName = tableStyle.StyleTextCenter,
+                BottomBorder = new BorderStyle
+                {
+                    Color = tableStyle.BorderColor,
+                    Space = tableStyle.BorderSpace,
+                    Size = tableStyle.Header!.BorderSize
+                },
+                ShadingColor = tableStyle.ShadingColor,
+                ShadingFill = tableStyle.Header.ShadingFill
+            }
+        ]);
 
         foreach (var log in logs)
         {
@@ -401,11 +415,11 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     TableCellBorders = new TableCellBorders
                     {
                         TopBorder = new TopBorder { Val = BorderValues.Nil },
-                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
+                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = tableStyle!.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
                         BottomBorder = new BottomBorder { Val = BorderValues.Nil },
                         RightBorder = new RightBorder { Val = BorderValues.Nil }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
             var paragraph1 = new Paragraph
@@ -428,19 +442,19 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     TableCellWidth = new TableCellWidth { Width = $"{VersionColumnSize}", Type = TableWidthUnitValues.Dxa },
                     TableCellBorders = new TableCellBorders
                     {
-                        TopBorder = new TopBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
+                        TopBorder = new TopBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
                         LeftBorder = new LeftBorder { Val = BorderValues.Nil },
                         BottomBorder = new BottomBorder { Val = BorderValues.Nil },
-                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor }
+                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
             paragraph1 = new Paragraph
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
+                    ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft },
                     KeepNext = new KeepNext(),
                     WidowControl = new WidowControl { Val = false },
                     ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
@@ -464,19 +478,19 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     TableCellWidth = new TableCellWidth { Width = $"{DescriptionComulnSize}", Type = TableWidthUnitValues.Dxa },
                     TableCellBorders = new TableCellBorders
                     {
-                        TopBorder = new TopBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
-                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
+                        TopBorder = new TopBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
+                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
                         BottomBorder = new BottomBorder { Val = BorderValues.Nil },
-                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor }
+                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
             paragraph1 = new Paragraph
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
+                    ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft },
                     KeepNext = new KeepNext(),
                     WidowControl = new WidowControl { Val = false },
                     ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
@@ -509,11 +523,11 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     TableCellBorders = new TableCellBorders
                     {
                         TopBorder = new TopBorder { Val = BorderValues.Nil },
-                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
-                        BottomBorder = log.Equals(logs.Last()) ? new BottomBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor } : new BottomBorder { Val = BorderValues.Nil },
+                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
+                        BottomBorder = log.Equals(logs.Last()) ? new BottomBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor } : new BottomBorder { Val = BorderValues.Nil },
                         RightBorder = new RightBorder { Val = BorderValues.Nil }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
             paragraph1 = new Paragraph
@@ -538,17 +552,17 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     {
                         TopBorder = new TopBorder { Val = BorderValues.Nil },
                         LeftBorder = new LeftBorder { Val = BorderValues.Nil },
-                        BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
-                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor }
+                        BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
+                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
             paragraph1 = new Paragraph
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
+                    ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft },
                     KeepNext = new KeepNext(),
                     WidowControl = new WidowControl { Val = false },
                     ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
@@ -556,7 +570,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
             };
             paragraph1.Append(new Run(new Text(log.Edited?.ToShortDateString() ?? string.Empty))
             {
-                RunProperties = new RunProperties ()
+                RunProperties = new RunProperties()
             });
             tableCell.Append(paragraph1);
 
@@ -570,36 +584,32 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                     TableCellBorders = new TableCellBorders
                     {
                         TopBorder = new TopBorder { Val = BorderValues.Nil },
-                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
-                        BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor },
-                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = settings.BorderSpace, Size = settings.BorderSize, Color = settings.BorderColor }
+                        LeftBorder = new LeftBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
+                        BottomBorder = new BottomBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor },
+                        RightBorder = new RightBorder { Val = BorderValues.Single, Space = tableStyle.BorderSpace, Size = tableStyle.BorderSize, Color = tableStyle.BorderColor }
                     },
-                    Shading = new Shading { Color = settings.BorderColor, Fill = settings.BorderColor, Val = ShadingPatternValues.Clear }
+                    Shading = new Shading { Color = tableStyle.BorderColor, Fill = tableStyle.BorderColor, Val = ShadingPatternValues.Clear }
                 }
             };
-            //paragraph1 = new Paragraph
-            //{
-            //    ParagraphProperties = new ParagraphProperties
-            //    {
-            //        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
-            //        KeepNext = new KeepNext(),
-            //        WidowControl = new WidowControl { Val = false },
-            //        //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
-            //    }
-            //};
-            //paragraph1.Append(new Run(new Text(log.Description))
-            //{
-            //    RunProperties = new RunProperties()
-            //});
-
-            //tableCell.Append(paragraph1);
 
             if (!string.IsNullOrEmpty(log.Description))
             {
-                if (Helpers.DocumentHelper.MarkdownToParagraph(log.Description!) is IEnumerable<OpenXmlElement> xElements)
+                paragraph1 = new Paragraph
                 {
-                    tableCell.Append(xElements);
-                }
+                    ParagraphProperties = new ParagraphProperties
+                    {
+                        ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft },
+                        KeepNext = new KeepNext(),
+                        WidowControl = new WidowControl { Val = false },
+                        //ParagraphMarkRunProperties = new ParagraphMarkRunProperties()
+                    }
+                };
+                paragraph1.Append(new Run(new Text(log.Description!))
+                {
+                    RunProperties = new RunProperties()
+                });
+
+                tableCell.Append(paragraph1);
             }
             else
             {
@@ -607,7 +617,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
                 {
                     ParagraphProperties = new ParagraphProperties
                     {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.TableTextLeft].Name },
+                        ParagraphStyleId = new ParagraphStyleId { Val = tableStyle.StyleTextLeft },
                         KeepNext = new KeepNext()
                     }
                 });
@@ -617,88 +627,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Cor
 
             table.Append(tableRow);
         }
-        return table;
-    }
 
-    private IEnumerable<OpenXmlElement> AddUserDefineType(IEnumerable<Core.Models.ProjectTree.Plc.Type> userDefineTypes, CultureInfo culture)
-    {
-        var xmlElements = new List<OpenXmlElement>();
-        foreach (var userDefineType in userDefineTypes)
-        {
-            var paragraph = new Paragraph
-            {
-                ParagraphProperties = new ParagraphProperties
-                {
-                    ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name },
-                }
-            };
-            paragraph.Append(new Run(new Text($"{userDefineType.Name} ("))
-            {
-                RunProperties = new RunProperties
-                {
-                    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                }
-            });
-
-            if (userDefineType.IsSafetyBlock)
-            {
-                paragraph.Append(new Run(new Text($"SafetyUDT"))
-                {
-                    RunProperties = new RunProperties
-                    {
-                        Shading = new Shading { Color = "auto", Fill = "FFFF33", Val = ShadingPatternValues.Clear },
-                        NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                    }
-                });
-            }
-            else
-            {
-                paragraph.Append(new Run(new Text($"UDT"))
-                {
-                    RunProperties = new RunProperties
-                    {
-                        NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                    }
-                });
-            }
-
-            if (!string.IsNullOrEmpty(userDefineType.Version))
-            {
-                paragraph.Append(new Run(new Text($" / V{userDefineType.Version}") { Space = SpaceProcessingModeValues.Preserve })
-                {
-                    RunProperties = new RunProperties
-                    {
-                        NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                    }
-                });
-            }
-
-            paragraph.Append(new Run(new Text(")") { Space = SpaceProcessingModeValues.Preserve })
-            {
-                RunProperties = new RunProperties
-                {
-                    NoProof = new NoProof { Val = new DocumentFormat.OpenXml.OnOffValue(true) },
-                }
-            });
-            xmlElements.Add(paragraph);
-
-            if (!string.IsNullOrEmpty(userDefineType.Descriptions?[culture]))
-            {
-                xmlElements.Add(new Paragraph(new Run(new Text("Description")))
-                {
-                    ParagraphProperties = new ParagraphProperties
-                    {
-                        ParagraphStyleId = new ParagraphStyleId { Val = Helpers.DocumentHelper.Styles[OpenXmlStyles.BlockTitle].Name }
-                    }
-                });
-                if (Helpers.DocumentHelper.MarkdownToParagraph(userDefineType.Descriptions![culture]) is IEnumerable<OpenXmlElement> xElements)
-                {
-                    xmlElements.AddRange(xElements);
-                }
-            }
-
-            xmlElements.Add(new Builders.UserDatatypeChapter(settings).Build(userDefineType, culture));
-        }
-        return xmlElements;
+        document.BodyAppend(table);
     }
 }

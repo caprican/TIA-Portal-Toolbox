@@ -45,7 +45,7 @@
                     HorizontalTitleAlignment="Right" Style="{StaticResource LargeTileStyle}">
                 <!--<iconPacks:PackIconModern Width="40" Height="40" Kind="Email" />-->
             </controls:Tile>
-            <controls:Tile Title="Documents" Margin="3" Command="{Binding GotoDocumensBuilderCommand}"
+            <controls:Tile Title="{x:Static properties:Resources.MainPageDocumentTitle}" Margin="3" Command="{Binding GotoDocumensBuilderCommand}"
                     controls:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
                     Style="{StaticResource LargeTileStyle}">
                 <!--<iconPacks:PackIconFontAwesome Width="40" Height="40" Kind="DesktopSolid" />-->

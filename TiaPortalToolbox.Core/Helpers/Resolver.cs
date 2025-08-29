@@ -174,6 +174,14 @@ public static class Resolver
             {
                 var names = key.GetSubKeyNames().OrderBy(x => x).ToList();
 
+                foreach (var item in names.ToList())
+                {
+                    if(key.OpenSubKey(item)?.GetSubKeyNames().Contains("PublicAPI") == false)
+                    {
+                        names.Remove(item);
+                    }
+                }
+
                 var result = (from item in names
                               where Convert.ToDecimal(item.Substring(0, 4), CultureInfo.InvariantCulture) >= Convert.ToDecimal(StrRequiredVersion.Substring(1, 4), CultureInfo.InvariantCulture)
                               select item.Substring(0, 4)).ToList();

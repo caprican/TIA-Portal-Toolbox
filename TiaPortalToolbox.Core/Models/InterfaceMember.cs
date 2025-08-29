@@ -16,6 +16,8 @@ public class InterfaceMember
 
     public string DefaultValue { get; set; } = string.Empty;
 
+    public bool IsConstant { get; set; } = false;
+
     public bool Islocked { get; set; } = false;
 
     public bool HidenInterface { get; set; } = false;
