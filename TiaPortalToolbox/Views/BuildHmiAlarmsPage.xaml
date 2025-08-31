@@ -49,15 +49,14 @@
         </behaviors:RibbonPageConfiguration>
     </behaviors:RibbonTabsBehavior.PageConfiguration>
     <Page.Content>
-        <Grid Background="{DynamicResource MahApps.Brushes.Accent4}">
+        <ScrollViewer Background="{DynamicResource MahApps.Brushes.Accent4}">
             <ListBox Grid.Row="0" ItemsSource="{Binding Connexions}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding ConnexionSelected}"
                      VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
                      SelectionMode="Extended"
                      Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Expander VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True"
-                                  >
+                        <Expander VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True">
                             <Expander.Header>
                                 <Grid VerticalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
@@ -80,8 +79,8 @@
                             </Expander.Header>
                             <Expander.Content>
                                 <ListBox ItemsSource="{Binding Blocks}" SelectionMode="Extended"
-                                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                                         Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
+                                          VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                          Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Stretch">
@@ -100,6 +99,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
+        </ScrollViewer>
     </Page.Content>
 </Page>

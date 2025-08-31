@@ -70,6 +70,60 @@ namespace TiaPortalToolbox.Properties {
         }
         
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à Create or update HMI alarms.
+        /// </summary>
+        public static string BuildHmiAlarmsPageBuildAlarmsText {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageBuildAlarmsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à HMI Alarms.
+        /// </summary>
+        public static string BuildHmiAlarmsPageBuildAlarmsTitle {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageBuildAlarmsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Create or update HMI Tags.
+        /// </summary>
+        public static string BuildHmiAlarmsPageBuildTagsText {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageBuildTagsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à HMI Tags.
+        /// </summary>
+        public static string BuildHmiAlarmsPageBuildTagsTitle {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageBuildTagsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Update alarms&apos;s datablocks list.
+        /// </summary>
+        public static string BuildHmiAlarmsPageRefreshText {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageRefreshText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Refresh data block list.
+        /// </summary>
+        public static string BuildHmiAlarmsPageRefreshTite {
+            get {
+                return ResourceManager.GetString("BuildHmiAlarmsPageRefreshTite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à Author.
         /// </summary>
         public static string DocumentPageAuthorColumnHeader {

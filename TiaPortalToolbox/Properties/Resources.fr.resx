@@ -294,4 +294,22 @@
   <data name="DocumentPageMessageBuildedText" xml:space="preserve">
     <value>Le document a été créé avec succès</value>
   </data>
+  <data name="BuildHmiAlarmsPageRefreshTite" xml:space="preserve">
+    <value>Actualiser la liste des blocs de données</value>
+  </data>
+  <data name="BuildHmiAlarmsPageRefreshText" xml:space="preserve">
+    <value>Mettre à jour la liste des blocs de données des alarmes</value>
+  </data>
+  <data name="BuildHmiAlarmsPageBuildTagsTitle" xml:space="preserve">
+    <value>Variables HMI</value>
+  </data>
+  <data name="BuildHmiAlarmsPageBuildTagsText" xml:space="preserve">
+    <value>Créer ou mettre à jour des varaibles IHM</value>
+  </data>
+  <data name="BuildHmiAlarmsPageBuildAlarmsTitle" xml:space="preserve">
+    <value>Alarmes IHM</value>
+  </data>
+  <data name="BuildHmiAlarmsPageBuildAlarmsText" xml:space="preserve">
+    <value>Créer ou mettre à jour des alarmes IHM</value>
+  </data>
 </root>

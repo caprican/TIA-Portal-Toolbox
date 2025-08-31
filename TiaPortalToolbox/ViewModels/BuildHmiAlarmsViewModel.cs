@@ -81,7 +81,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
 
     private async Task OnRefreshList()
     {
-        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageRefreshTite, Resources.BuildHmiAlarmsPageRefreshText);
         progress.SetIndeterminate();
 
         Connexions = [];
@@ -98,7 +98,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
         var defaultAlarmsClass = "Alarm";
 
         //Task.Run(() => { plcProjectService.BuildHmiTags(Devices.Where(w => w.Selected == true).ToList(), defaultAlarmsClass, SimplifyTagname); });
-        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildTagsTitle, Resources.BuildHmiAlarmsPageBuildTagsText);
         progress.SetIndeterminate();
 
         await unifiedService.BuildHmiTags(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
@@ -110,7 +110,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
     {
         var defaultAlarmsClass = "Alarm";
 
-        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildAlarmsTitle, Resources.BuildHmiAlarmsPageBuildAlarmsText);
         progress.SetIndeterminate();
 
         await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
