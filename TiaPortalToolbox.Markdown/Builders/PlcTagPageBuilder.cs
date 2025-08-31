@@ -31,7 +31,7 @@ internal class PlcTagPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
                 document.MarkdownConvert(settings, item.Descriptions![settings.Culture]);
             }
 
-            document.BodyAppend(new Paragraph(new Run(new Text("Parameter description")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.ParameterDescriptionParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -41,7 +41,7 @@ internal class PlcTagPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             switch (item.Name)
             {
                 case string _ when item.Name.EndsWith("_Constants"):
-                    document.BodyAppend(new Paragraph(new Run(new Text("Constant identifier, values and description")))
+                    document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.ConstantText)))
                     {
                         ParagraphProperties = new ParagraphProperties
                         {
@@ -52,7 +52,7 @@ internal class PlcTagPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
                     new PlcConstantChapterBuilder(settings, document).Build(item);
                     break;
                 case string _ when item.Name.EndsWith("_ErrorCodes"):
-                    document.BodyAppend(new Paragraph(new Run(new Text("Status & Error codes")))
+                    document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.ErrorCodeText)))
                     {
                         ParagraphProperties = new ParagraphProperties
                         {

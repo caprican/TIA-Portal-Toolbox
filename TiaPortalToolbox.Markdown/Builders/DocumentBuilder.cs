@@ -86,6 +86,7 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
 
                 var body = mainDocumentPart.Document.AppendChild(new Body());
 
+                // TODO : Preamble chapter
                 //if (!string.IsNullOrEmpty(plcItem.Preamble?[culture]))
                 //{
                 //    //body.Append(new Paragraph(new Run(new Text(plcItem.Preamble![culture]!))));
@@ -95,7 +96,7 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
                 var plcBlocks = projetItems.OfType<Core.Models.ProjectTree.Plc.Blocks.Object>();
                 if(plcBlocks.Any())
                 {
-                    mainDocumentPart.AddParagraph("Program blocks", style.Headings[1]);
+                    mainDocumentPart.AddParagraph(Properties.Resources.ProgramBlockHeader, style.Headings[1]);
                     foreach (var plcItem in plcBlocks)
                     {
                         var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
@@ -108,7 +109,7 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
                 var plcUserTypes = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
                 if (plcUserTypes.Any())
                 {
-                    mainDocumentPart.AddParagraph("PLC data types", style.Headings[1]);
+                    mainDocumentPart.AddParagraph(Properties.Resources.DatatypeHeader, style.Headings[1]);
                     foreach (var plcItem in plcUserTypes)
                     {
                         var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
@@ -120,15 +121,16 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
                 var plcTags = projetItems.OfType<Core.Models.ProjectTree.Plc.Tag>();
                 if (plcTags.Any())
                 {
-                    mainDocumentPart.AddParagraph("PLC tags & constants", style.Headings[1]);
+                    mainDocumentPart.AddParagraph(Properties.Resources.TagsConstantsHeader, style.Headings[1]);
                     pageFactory.CreatePage(document, plcTags, null)?.Build();
                 }
 
+                // TODO : Appendix chapter
                 //if (!string.IsNullOrEmpty(plcItem.Appendix?[culture]))
                 //    body.Append(new Paragraph(new Run(new Text(plcItem.Appendix![culture]!))));
 
                 body.Append(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
-                mainDocumentPart.AddParagraph("Change log", style.Headings[1]);
+                mainDocumentPart.AddParagraph(Properties.Resources.ChangeLogHeader, style.Headings[1]);
 
                 tcs.SetResult(false);
             }

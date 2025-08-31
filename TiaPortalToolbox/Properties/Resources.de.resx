@@ -282,4 +282,16 @@
   <data name="ProgressDialogExportHeader" xml:space="preserve">
     <value>Export des SPS-Blocks</value>
   </data>
+  <data name="DocumentPageMessageErrorTitle" xml:space="preserve">
+    <value>Einstellungsfehler</value>
+  </data>
+  <data name="DocumentPageMessageErrorSettingsText" xml:space="preserve">
+    <value>Dokumenteinstellungen sind nicht konfiguriert</value>
+  </data>
+  <data name="DocumentPageMessageBuildedTitle" xml:space="preserve">
+    <value>Dokument erstellt</value>
+  </data>
+  <data name="DocumentPageMessageBuildedText" xml:space="preserve">
+    <value>Das Dokument wurde erfolgreich erstellt</value>
+  </data>
 </root>

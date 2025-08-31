@@ -39,7 +39,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
         if (!string.IsNullOrEmpty(plcItem.Author?[settings.Culture]))
         {
-            document.BodyAppend(new Paragraph(new Run(new Text($"Author : {plcItem.Author![settings.Culture]}"))
+            document.BodyAppend(new Paragraph(new Run(new Text($"{Properties.Resources.AuthorParagraph} : {plcItem.Author![settings.Culture]}"))
             {
                 RunProperties = new RunProperties
                 {
@@ -61,7 +61,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
         if (!string.IsNullOrEmpty(plcItem.Function?[settings.Culture]))
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Short description")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.ShortDescriptionParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -72,14 +72,14 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             document.MarkdownConvert(settings, plcItem.Function![settings.Culture]);
         }
 
-        document.BodyAppend(new Paragraph(new Run(new Text("Interface description")))
+        document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.InterfaceDescriptionParagraph)))
         {
             ParagraphProperties = new ParagraphProperties
             {
                 ParagraphStyleId = new ParagraphStyleId { Val = documentStyle.MarkdownStyles["BlockTitle"] }
             }
         });
-        document.BodyAppend(new Paragraph(new Run(new Text("Block interface")))
+        document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.BlockInterfaceParagraph)))
         {
             ParagraphProperties = new ParagraphProperties
             {
@@ -92,7 +92,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         var inputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Input);
         if (inputMember.Any())
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Input parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.InputParameterParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -115,7 +115,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         var outputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Output);
         if (outputMember?.Count() > 0)
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Output parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.OutputParameterParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -138,7 +138,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         var inoutputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.InOutput);
         if (inoutputMember?.Count() > 0)
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("In/Out parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.InOutParameterParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -161,7 +161,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         var staticMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Static);
         if (staticMember?.Count() > 0)
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Statics parameter")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.StaticsParameterParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -183,7 +183,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
         if (functionUserDefines.Count > 0)
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("User defined datatype(s)")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.UdtParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -256,7 +256,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
         if (!string.IsNullOrEmpty(plcItem.Descriptions?[settings.Culture]))
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Functional description")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.FonctionalDescriptionParagraph)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -268,7 +268,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
         if (plcItem.Logs?[settings.Culture] is not null)
         {
-            document.BodyAppend(new Paragraph(new Run(new Text("Change log")))
+            document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.ChangeLogHeader)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {
@@ -283,7 +283,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
     {
         var _asDefaultValue = members.Any(member => !string.IsNullOrEmpty(member.DefaultValue));
 
-        var markdownTable = $"Identifier | Data type{(_asDefaultValue ? " | Default value " : " ")}| Description\n --- | --- | {(_asDefaultValue ? "-- | " : "")}--- |\n";
+        var markdownTable = $"{Properties.Resources.IdentifierColumn} | {Properties.Resources.DatatypeColumn}{(_asDefaultValue ? $" | {Properties.Resources.DefaultvalueColumn} " : " ")}| {Properties.Resources.DescriptionColumn}\n --- | --- | {(_asDefaultValue ? "-- | " : "")}--- |\n";
 
         foreach (var member in members)
         {
@@ -372,7 +372,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         [
             new HeaderDefine
             {
-                Title = "Version & Date",
+                Title = Properties.Resources.VersionColumn,
                 Width = (uint)settings.IdentifierColumnSize,
                 GridSpan = 2,
                 StyleName = tableStyle.StyleTextLeft,
@@ -387,7 +387,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             },
             new HeaderDefine
             {
-                Title = "Change description",
+                Title = Properties.Resources.ChangeDescriptionColumn,
                 StyleName = tableStyle.StyleTextCenter,
                 BottomBorder = new BorderStyle
                 {

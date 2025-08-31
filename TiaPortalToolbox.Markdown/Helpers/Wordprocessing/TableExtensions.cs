@@ -46,7 +46,7 @@ public static class TableExtensions
                     TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
                 }
             };
-            var paragraph1 = new Paragraph(new Run(new Text(header.Title)))
+            var paragraph1 = new Paragraph(new Run(new Text(header.Title ?? string.Empty)))
             {
                 ParagraphProperties = new ParagraphProperties
                 {

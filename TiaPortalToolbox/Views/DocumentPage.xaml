@@ -24,7 +24,6 @@
                                 <TextBlock Text="&#xF583;" FontSize="32" FontFamily="Segoe MDL2 Assets"/>
                             </Fluent:Button.LargeIcon>
                         </Fluent:Button>
-                        <Fluent:Button Size="Large" Header="Test" Command="{Binding TestCommand}" />
                     </Fluent:RibbonGroupBox>
 
                     <Fluent:RibbonGroupBox State="Middle" MinWidth="150"

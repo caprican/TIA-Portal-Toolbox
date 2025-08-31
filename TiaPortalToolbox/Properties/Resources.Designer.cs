@@ -160,6 +160,42 @@ namespace TiaPortalToolbox.Properties {
         }
         
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à The document has been created successfully.
+        /// </summary>
+        public static string DocumentPageMessageBuildedText {
+            get {
+                return ResourceManager.GetString("DocumentPageMessageBuildedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Document created.
+        /// </summary>
+        public static string DocumentPageMessageBuildedTitle {
+            get {
+                return ResourceManager.GetString("DocumentPageMessageBuildedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Document settings are not configured.
+        /// </summary>
+        public static string DocumentPageMessageErrorSettingsText {
+            get {
+                return ResourceManager.GetString("DocumentPageMessageErrorSettingsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Setting error.
+        /// </summary>
+        public static string DocumentPageMessageErrorTitle {
+            get {
+                return ResourceManager.GetString("DocumentPageMessageErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à Name.
         /// </summary>
         public static string DocumentPageNameColumnHeader {

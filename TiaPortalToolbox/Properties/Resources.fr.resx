@@ -282,4 +282,16 @@
   <data name="ProgressDialogExportHeader" xml:space="preserve">
     <value>Exportation du bloc PLC</value>
   </data>
+  <data name="DocumentPageMessageErrorTitle" xml:space="preserve">
+    <value>Erreur de configuration</value>
+  </data>
+  <data name="DocumentPageMessageErrorSettingsText" xml:space="preserve">
+    <value>Les paramètres du document ne sont pas configurés</value>
+  </data>
+  <data name="DocumentPageMessageBuildedTitle" xml:space="preserve">
+    <value>Document créé</value>
+  </data>
+  <data name="DocumentPageMessageBuildedText" xml:space="preserve">
+    <value>Le document a été créé avec succès</value>
+  </data>
 </root>

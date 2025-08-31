@@ -31,7 +31,6 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
     private ICommand? buildDocumentCommand;
     private ICommand? loadDocumentCommand;
-    private ICommand? testCommand;
 
     private List<CultureInfo>? projectLangages;
     private CultureInfo? referenceLanguage;
@@ -195,6 +194,8 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
     private async Task OnLoadDocument(Core.Models.ProjectTree.Object? e)
     {
+        if (e is null) return;
+
         PlcObjects = [];
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Properties.Resources.DocumentPageLoadTitle, e.Name);
         progress.SetIndeterminate();
@@ -323,7 +324,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
         if(settings is null)
         {
-            await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, "Settings error", "Document settings are not configured");
+            await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, Properties.Resources.DocumentPageMessageErrorTitle, Properties.Resources.DocumentPageMessageErrorSettingsText);
             return;
         }
 
@@ -351,7 +352,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         await documentBuilder.CreateDocument(projectItems, derivedTypes);
         documentBuilder.Save();
 
-        await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, "Document created", "The document has been created successfully");
+        await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, Properties.Resources.DocumentPageMessageBuildedTitle, Properties.Resources.DocumentPageMessageBuildedText);
 
 #if DEBUG
         System.Diagnostics.Process.Start(settings.DocumentPath);

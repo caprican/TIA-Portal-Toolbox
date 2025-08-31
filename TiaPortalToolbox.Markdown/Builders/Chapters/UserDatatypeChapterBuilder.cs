@@ -18,25 +18,11 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
     {
         if (!string.IsNullOrEmpty(userDefineType.Descriptions?[settings.Culture]))
         {
-            //document.BodyAppend(new Paragraph(new Run(new Text("Description")))
-            //{
-            //    ParagraphProperties = new ParagraphProperties
-            //    {
-            //        ParagraphStyleId = new ParagraphStyleId { Val = settings.DocumentStyle.MarkdownStyles["BlockTitle"] }
-            //    }
-            //});
-            document.MainDocumentPart?.AddParagraph("Description", settings.DocumentStyle.MarkdownStyles["BlockTitle"]);
+            document.MainDocumentPart?.AddParagraph(Properties.Resources.DescriptionColumn, settings.DocumentStyle.MarkdownStyles["BlockTitle"]);
             document.MarkdownConvert(settings, userDefineType.Descriptions![settings.Culture]);
         }
 
-        //document.BodyAppend(new Paragraph(new Run(new Text("Parameter description")))
-        //{
-        //    ParagraphProperties = new ParagraphProperties
-        //    {
-        //        ParagraphStyleId = new ParagraphStyleId { Val = settings.DocumentStyle.MarkdownStyles["BlockTitle"] }
-        //    }
-        //});
-        document.MainDocumentPart?.AddParagraph("Parameter description", settings.DocumentStyle.MarkdownStyles["BlockTitle"]);
+        document.MainDocumentPart?.AddParagraph(Properties.Resources.ParameterDescriptionParagraph, settings.DocumentStyle.MarkdownStyles["BlockTitle"]);
         BuildTable(userDefineType);
     }
 
@@ -62,7 +48,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
         //        new("Description", DescriptionColumnSize)
         //    ], settings));
 
-        table.Append(new TableRow(new TableCell(new Paragraph(new Run(new Text("Identifier")))
+        table.Append(new TableRow(new TableCell(new Paragraph(new Run(new Text(Properties.Resources.IdentifierColumn)))
         {
             ParagraphProperties = new ParagraphProperties
             {
@@ -83,7 +69,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
         },
-        new TableCell(new Paragraph(new Run(new Text("Data type")))
+        new TableCell(new Paragraph(new Run(new Text(Properties.Resources.DatatypeColumn)))
         {
             ParagraphProperties = new ParagraphProperties
             {
@@ -103,7 +89,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
         },
-        new TableCell(new Paragraph(new Run(new Text("Default value")))
+        new TableCell(new Paragraph(new Run(new Text(Properties.Resources.DefaultvalueColumn)))
         {
             ParagraphProperties = new ParagraphProperties
             {
@@ -123,7 +109,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
                 TableCellVerticalAlignment = new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
             }
         },
-        new TableCell(new Paragraph(new Run(new Text("Description")))
+        new TableCell(new Paragraph(new Run(new Text(Properties.Resources.DescriptionColumn)))
         {
             ParagraphProperties = new ParagraphProperties
             {
