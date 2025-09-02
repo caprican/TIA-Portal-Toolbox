@@ -10,6 +10,6 @@ public partial class DocumentPage : Page
     {
         InitializeComponent();
         DataContext = viewModel;
-        ribbonTabItem.DataContext = viewModel;
+        groupBox.DataContext = viewModel;
     }
 }

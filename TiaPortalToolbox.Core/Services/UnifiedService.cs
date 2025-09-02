@@ -24,7 +24,7 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
 {
     private readonly IOpennessService opennessService = opennessService;
 
-    private string UnifiedPlcTagNormalized(string tagname)
+    private static string UnifiedPlcTagNormalized(string tagname)
     {
         var compose = tagname.Split('.');
         string plcTag = compose.FirstOrDefault();
@@ -79,7 +79,7 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
 
                 if (connexions?.Count() > 0)
                 {
-                    ExtractTagAlarms(connexions, defaultAlarmsClass);
+                    //ExtractTagAlarms(connexions, defaultAlarmsClass);
 
                     //BuildHmiTagTables(connexions);
                     //BuildHmiTags(connexions, simplifyTagname);
@@ -107,8 +107,8 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
                 if (connexions?.Count() > 0)
                 {
                     ExtractTagAlarms(connexions, defaultAlarmsClass);
-
-
+                    BuildHmiTags(connexions, false);
+                    BuildDiscretAlarms(connexions);
                 }
                 tcs.SetResult(connexions);
             }
@@ -157,10 +157,12 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
     private Dictionary<CultureInfo, string>? GetMemberComment(IComment_T comments)
     {
         var result = new Dictionary<CultureInfo, string>();
-
-        foreach (var comment in comments)
+        if(comments?.Count() > 0)
         {
-            result.Add(CultureInfo.GetCultureInfo(comment.Lang), comment.Value);
+            foreach (var comment in comments)
+            {
+                result.Add(CultureInfo.GetCultureInfo(comment.Lang), comment.Value);
+            }
         }
 
         return result.Count > 0 ? result : null;
@@ -514,7 +516,6 @@ public class UnifiedService(IOpennessService opennessService) : IUnifiedService
             foreach (var item in connexion.UnifiedDevice.Device.TagTables)
             {
                 await opennessService.ExportAsync(item);
-
             }
 
         }

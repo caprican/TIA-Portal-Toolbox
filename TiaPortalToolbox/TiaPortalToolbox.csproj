@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TiaPortalToolbox.Core\TiaPortalToolbox.Core.csproj" />
     <ProjectReference Include="..\TiaPortalToolbox.Markdown\TiaPortalToolbox.Doc.csproj" />
+    <ProjectReference Include="..\TiaPortalToolbox.Table\TiaPortalToolbox.Table.csproj" />
   </ItemGroup>
 
   <ItemGroup>

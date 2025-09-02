@@ -13,7 +13,7 @@
       xmlns:viewModes="clr-namespace:TiaPortalToolbox.ViewModels">
     <behaviors:RibbonTabsBehavior.PageConfiguration>
         <behaviors:RibbonPageConfiguration>
-            <behaviors:RibbonPageConfiguration.Tabs>
+            <!--<behaviors:RibbonPageConfiguration.Tabs>
                 <Fluent:RibbonTabItem x:Name="ribbonTabItem" Fluent:KeyTip="A" Header="{x:Static properties:Resources.DocumentPageRibbonTabHeader}" behaviors:RibbonTabsBehavior.IsTabFromPage="True">
                     <Fluent:RibbonGroupBox State="Large" MinWidth="150">
                         <Fluent:Button Size="Large" Header="{x:Static properties:Resources.DocumentPageRibbonTabBuildDocumentHeader}" Command="{Binding BuildDocumentCommand}">
@@ -32,7 +32,25 @@
                         <Fluent:ComboBox Header="{x:Static properties:Resources.ShellPageRibbonHomeReferenceLanguageTitle}" ItemsSource="{Binding ProjectLangages}" SelectedItem="{Binding ReferenceLanguage}"/>
                     </Fluent:RibbonGroupBox>
                 </Fluent:RibbonTabItem>
-            </behaviors:RibbonPageConfiguration.Tabs>
+            </behaviors:RibbonPageConfiguration.Tabs>-->
+            <behaviors:RibbonPageConfiguration.HomeGroups>
+                <Fluent:RibbonGroupBox x:Name="groupBox" State="Middle" MinWidth="150"
+                                       Header="{x:Static properties:Resources.ShellPageRibbonHomeProjectLanguagesGroupHeader}"
+                                       behaviors:RibbonTabsBehavior.IsGroupFromPage="True">
+                    <Fluent:ComboBox Header="{x:Static properties:Resources.ShellPageRibbonHomeEditingLanguageTitle}" ItemsSource="{Binding ProjectLangages}" SelectedItem="{Binding EditingLanguage}"/>
+                    <Fluent:ComboBox Header="{x:Static properties:Resources.ShellPageRibbonHomeReferenceLanguageTitle}" ItemsSource="{Binding ProjectLangages}" SelectedItem="{Binding ReferenceLanguage}"/>
+
+                    <Fluent:Button Size="Large" Header="{x:Static properties:Resources.DocumentPageRibbonTabBuildDocumentHeader}" Command="{Binding BuildDocumentCommand}">
+                        <Fluent:Button.Icon>
+                            <TextBlock Text="&#xF583;" FontSize="16" FontFamily="Segoe MDL2 Assets"/>
+                        </Fluent:Button.Icon>
+                        <Fluent:Button.LargeIcon>
+                            <TextBlock Text="&#xF583;" FontSize="32" FontFamily="Segoe MDL2 Assets"/>
+                        </Fluent:Button.LargeIcon>
+                    </Fluent:Button>
+                    
+                </Fluent:RibbonGroupBox>
+            </behaviors:RibbonPageConfiguration.HomeGroups>
         </behaviors:RibbonPageConfiguration>
     </behaviors:RibbonTabsBehavior.PageConfiguration>
 

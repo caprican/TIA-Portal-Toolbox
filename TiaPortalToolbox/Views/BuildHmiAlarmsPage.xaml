@@ -44,61 +44,68 @@
                             <TextBlock Text="&#xE792;" FontSize="32" FontFamily="Segoe MDL2 Assets"/>
                         </Fluent:Button.LargeIcon>
                     </Fluent:Button>
+                    <Fluent:Button Padding="{StaticResource XXSmallMargin}" Command="{Binding ElementName=shellFrame, Path=Content.DataContext.BuildCommand}"/>
+
+
                 </Fluent:RibbonGroupBox>
             </behaviors:RibbonPageConfiguration.HomeGroups>
         </behaviors:RibbonPageConfiguration>
     </behaviors:RibbonTabsBehavior.PageConfiguration>
     <Page.Content>
-        <ScrollViewer Background="{DynamicResource MahApps.Brushes.Accent4}">
-            <ListBox Grid.Row="0" ItemsSource="{Binding Connexions}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding ConnexionSelected}"
-                     VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                     SelectionMode="Extended"
-                     Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Expander VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True">
-                            <Expander.Header>
-                                <Grid VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" VerticalAlignment="Center">
-                                        <Run Text="{Binding HmiName, Mode=OneWay}"/>
-                                        <Run Text="=>"/>
-                                        <Run Text="{Binding PlcName, Mode=OneWay}"/>
-                                    </TextBlock>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Background="{DynamicResource MahApps.Brushes.Accent4}">
+                <ListBox Grid.Row="0" ItemsSource="{Binding Connexions}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding ConnexionSelected}"
+                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                         SelectionMode="Extended"
+                         Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Expander VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True">
+                                <Expander.Header>
+                                    <Grid VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" VerticalAlignment="Center">
+                                            <Run Text="{Binding HmiName, Mode=OneWay}"/>
+                                            <Run Text="=>"/>
+                                            <Run Text="{Binding PlcName, Mode=OneWay}"/>
+                                        </TextBlock>
 
-                                    <ComboBox Grid.Column="1" ItemsSource="{Binding AlarmClasses}" SelectedItem="{Binding AlarmClassDefault}"
-                                              Margin="{StaticResource SmallLeftRightMargin}"/>
+                                        <ComboBox Grid.Column="1" ItemsSource="{Binding AlarmClasses}" SelectedItem="{Binding AlarmClassDefault}"
+                                                  Margin="{StaticResource SmallLeftRightMargin}"/>
 
-                                    <CheckBox Grid.Column="3" IsChecked="{Binding Selected}"/>
-                                </Grid>
-                            </Expander.Header>
-                            <Expander.Content>
-                                <ListBox ItemsSource="{Binding Blocks}" SelectionMode="Extended"
-                                          VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                                          Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid VerticalAlignment="Stretch">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding DisplayName}"/>
-                                                <CheckBox Grid.Column="1"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Expander.Content>
-                        </Expander>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                                        <CheckBox Grid.Column="3" IsChecked="{Binding Selected}"/>
+                                    </Grid>
+                                </Expander.Header>
+                                <Expander.Content>
+                                    <ScrollViewer MaxHeight="400">
+                                        <ListBox ItemsSource="{Binding Blocks}" SelectionMode="Extended"
+                                                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                                  Style="{StaticResource MahApps.Styles.ListBox.Virtualized}">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid VerticalAlignment="Stretch">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding DisplayName}"/>
+                                                        <CheckBox Grid.Column="1"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </ScrollViewer>
+                                </Expander.Content>
+                            </Expander>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
         </ScrollViewer>
     </Page.Content>
 </Page>

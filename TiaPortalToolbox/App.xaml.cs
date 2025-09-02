@@ -46,7 +46,9 @@ public partial class App : Application
                     c.SetBasePath(appLocation!);
                 })
                 .ConfigureServices(ConfigureServices)
-                .ConfigureServices(OpennessConfigureService)
+                .ConfigureServices(Core.App.ConfigureService)
+                .ConfigureServices(Doc.App.ConfigureService)
+                .ConfigureServices(Table.App.ConfigureService)
                 .Build();
 
         await host.StartAsync();
@@ -75,14 +77,6 @@ public partial class App : Application
         services.AddSingleton<INavigationService, NavigationService>();
         //services.AddSingleton<ISampleDataService, SampleDataService>();
 
-        // Factories
-        services.AddTransient<Doc.Contracts.Factories.IPageFactory, Doc.Factories.PageFactory>();
-        //services.AddTransient<Core.Contracts.Factories.IPageFactory, Core.Factories.PageFactory>();
-
-        // Builders
-        services.AddTransient<Doc.Contracts.Builders.IDocumentBuilder, Doc.Builders.DocumentBuilder>();
-        //services.AddTransient<Core.Contracts.Builders.IDocumentBuilder, Core.Builders.DocumentBuilder>();
-
         // Views and ViewModels
         services.AddSingleton<IShellWindow, ShellWindow>();
         services.AddSingleton<ShellViewModel>();
@@ -108,15 +102,6 @@ public partial class App : Application
         // Configuration
         services.Configure<AppConfig>(context.Configuration.GetSection(nameof(AppConfig)));
 
-    }
-
-    private void OpennessConfigureService(HostBuilderContext context, IServiceCollection services)
-    {
-        services.AddSingleton<IOpennessService, OpennessService>();
-
-        services.AddTransient<IPlcService, PlcService>();
-        services.AddTransient<IHmiService, HmiService>();
-        services.AddTransient<IUnifiedService, UnifiedService>();
     }
 
     private async void OnExit(object sender, ExitEventArgs e)

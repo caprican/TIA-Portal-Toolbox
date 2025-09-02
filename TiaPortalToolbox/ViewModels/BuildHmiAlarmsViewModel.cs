@@ -1,19 +1,24 @@
 ﻿using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Data;
 using System.Windows.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using Microsoft.Extensions.Options;
+
 using TiaPortalToolbox.Contracts.ViewModels;
 using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Core.Services;
 using TiaPortalToolbox.Models;
 using TiaPortalToolbox.Properties;
+using TiaPortalToolbox.Table.Contracts.Builders;
 
 namespace TiaPortalToolbox.ViewModels;
 
-public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpennessService opennessService, IPlcService plcService, IHmiService hmiService, IUnifiedService unifiedService) : ObservableObject, INavigationAware
+public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpennessService opennessService, IPlcService plcService, IHmiService hmiService, IUnifiedService unifiedService
+                                    , IOptions<Table.Models.SpreadsheetSettings> settings, ISpreadsheetBuilder spreadsheetBuilder) : ObservableObject, INavigationAware
 {
     private readonly IDialogCoordinator dialogCoordinator = dialogCoordinator;
 
@@ -22,9 +27,13 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
     private readonly IHmiService hmiService = hmiService;
     private readonly IUnifiedService unifiedService = unifiedService;
 
+    private readonly Table.Models.SpreadsheetSettings? settings = settings?.Value;
+    private readonly ISpreadsheetBuilder spreadsheetBuilder = spreadsheetBuilder;
+
     private ICommand? refreshListCommand;
     private ICommand? buildAlarmsCommand;
     private ICommand? buildTagsCommand;
+    private ICommand? builCommand;
 
     private ObservableCollection<Connexion>? connexions;
     private Connexion? connexionSelected;
@@ -34,6 +43,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
     public ICommand BuildAlarmsCommand => buildAlarmsCommand ??= new AsyncRelayCommand(OnBuildAlarms);
     public ICommand BuildTagsCommand => buildTagsCommand ??= new AsyncRelayCommand(OnBuildTags);
     public ICommand RefreshListCommand => refreshListCommand ??= new AsyncRelayCommand(OnRefreshList);
+    public ICommand BuildCommand => builCommand ??= new AsyncRelayCommand(OnBuild);
 
     public ObservableCollection<Connexion>? Connexions
     {
@@ -97,7 +107,6 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
     {
         var defaultAlarmsClass = "Alarm";
 
-        //Task.Run(() => { plcProjectService.BuildHmiTags(Devices.Where(w => w.Selected == true).ToList(), defaultAlarmsClass, SimplifyTagname); });
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildTagsTitle, Resources.BuildHmiAlarmsPageBuildTagsText);
         progress.SetIndeterminate();
 
@@ -115,6 +124,41 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
 
         await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
         
+        await progress.CloseAsync();
+    }
+
+    private async Task OnBuild()
+    {
+        if (settings is null)
+        {
+            await dialogCoordinator.ShowMessageAsync(App.Current.MainWindow.DataContext, Properties.Resources.DocumentPageMessageErrorTitle, Properties.Resources.DocumentPageMessageErrorSettingsText);
+            return;
+        }
+
+        settings.ProjectPath = opennessService.ProjectPath ?? "";
+        settings.UserFolderPath = opennessService.UserFolder ?? "";
+
+#if DEBUG
+        settings.SpreadsheetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", $"test.xlsx");
+#else
+        var saveFileDialog = new SaveFileDialog()
+        {
+            Title = "Select the location to save the document",
+            FileName = $"{projectName}_{ReferenceLanguage?.Name}.docx",
+            Filter = "Word Document (*.docx)|*.docx",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        };
+        if (saveFileDialog.ShowDialog() != true)
+        {
+            settings.DocumentPath = saveFileDialog.FileName;
+        }
+#endif
+
+        var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
+        progress.SetIndeterminate();
+
+        await spreadsheetBuilder.CreateSpreadsheet();
+
         await progress.CloseAsync();
     }
 }

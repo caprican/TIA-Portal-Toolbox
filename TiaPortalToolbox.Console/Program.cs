@@ -69,7 +69,7 @@ public class Worker(IHostApplicationLifetime hostApplicationLifetime, IOpennessS
 
         //File.Copy("templatePath", @$"C:/Users/capri/Downloads/{blockName}_{culture.Name}.docx");
 
-        await documentBuilder.CreateDocument(projectItems, derivedItems, culture, @$"C:/Users/capri/Downloads/{projectName}_{culture.Name}.docx");
+        //await documentBuilder.CreateDocument(projectItems, derivedItems, culture, @$"C:/Users/capri/Downloads/{projectName}_{culture.Name}.docx");
         documentBuilder.Save();
 
         Console.WriteLine();
