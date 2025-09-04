@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Packaging;
 namespace TiaPortalToolbox.Doc.Builders;
 
 internal class PlcTagPageBuilder(IOptions<Models.DocumentSettings> settings, WordprocessingDocument document
-                                , IEnumerable<Core.Models.ProjectTree.Plc.Tag> plcItem) : IPageBuilder
+                                , IEnumerable<TiaPortalOpenness.Models.ProjectTree.Plc.Tag> plcItem) : IPageBuilder
 {
     private readonly Models.DocumentSettings settings = settings.Value;
 

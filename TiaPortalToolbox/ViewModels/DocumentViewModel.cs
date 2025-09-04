@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.IO;
 using System.Globalization;
 using System.Windows.Input;
 
@@ -7,13 +8,14 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Extensions.Options;
 
+using TiaPortalOpenness.Contracts.Services;
+
 using TiaPortalToolbox.Contracts.ViewModels;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Doc.Contracts.Builders;
 
-using TiaPortalToolbox.Core.Contracts.Services;
-using System.IO;
-using Microsoft.Win32;
+using TiaPortalOpenness.Models.ProjectTree.Plc;
+using TiaPortalOpenness.Models;
 
 namespace TiaPortalToolbox.ViewModels;
 
@@ -36,7 +38,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     private CultureInfo? referenceLanguage;
     private CultureInfo? editingLanguage;
 
-    private Core.Models.ProjectTree.Plc.Object? plcBlock;
+    private TiaPortalOpenness.Models.ProjectTree.Plc.Object? plcBlock;
 
     private string? title;
     private string? author;
@@ -46,9 +48,9 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     private string? description;
     private string? folderName;
     private List<Core.Models.PlcBlockLog>? logs;
-    private List<Core.Models.InterfaceMember>? interfaceMembers;
-    private ObservableCollection<Core.Models.ProjectTree.Plc.Object>? derivedTypes = null;
-    private ObservableCollection<Core.Models.ProjectTree.Object>? plcObjects = null;
+    private List<InterfaceMember>? interfaceMembers;
+    private ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Plc.Object>? derivedTypes = null;
+    private ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Object>? plcObjects = null;
 
     public List<CultureInfo>? ProjectLangages
     {
@@ -75,8 +77,8 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     }
 
     public ICommand? BuildDocumentCommand => buildDocumentCommand ??= new AsyncRelayCommand(OnBuildDocument);
-    public ICommand? LoadDocumentCommand => loadDocumentCommand ??= new AsyncRelayCommand<Core.Models.ProjectTree.Object?>(OnLoadDocument);
-    public Core.Models.ProjectTree.Plc.Object? PlcBlock
+    public ICommand? LoadDocumentCommand => loadDocumentCommand ??= new AsyncRelayCommand<TiaPortalOpenness.Models.ProjectTree.Object?>(OnLoadDocument);
+    public TiaPortalOpenness.Models.ProjectTree.Plc.Object? PlcBlock
     {
         get => plcBlock;
         set
@@ -98,12 +100,12 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
             
         }
     }
-    public ObservableCollection<Core.Models.ProjectTree.Plc.Object>? DerivedTypes
+    public ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Plc.Object>? DerivedTypes
     {
         get => derivedTypes;
         set => SetProperty(ref derivedTypes, value);
     }
-    public ObservableCollection<Core.Models.ProjectTree.Object>? PlcObjects
+    public ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Object>? PlcObjects
     {
         get => plcObjects;
         set => SetProperty(ref plcObjects, value);
@@ -145,7 +147,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         set => SetProperty(ref logs, value);
     }
 
-    public List<Core.Models.InterfaceMember>? InterfaceMembers
+    public List<InterfaceMember>? InterfaceMembers
     {
         get => interfaceMembers;
         set => SetProperty(ref interfaceMembers, value);
@@ -172,7 +174,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     {
         shellWindow.SelectedItemChanged += OnSelectedItemChanged;
 
-        if(parameter is Core.Models.ProjectTree.Object item)
+        if(parameter is TiaPortalOpenness.Models.ProjectTree.Object item)
         {
             OnSelectedItemChanged(this, item);
         }
@@ -182,7 +184,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         ReferenceLanguage = opennessService.ReferenceLanguage;
     }
 
-    private void OnSelectedItemChanged(object sender, Core.Models.ProjectTree.Object? e)
+    private void OnSelectedItemChanged(object sender, TiaPortalOpenness.Models.ProjectTree.Object? e)
     {
         LoadDocumentCommand?.Execute(e);
     }
@@ -192,7 +194,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
     }
 
-    private async Task OnLoadDocument(Core.Models.ProjectTree.Object? e)
+    private async Task OnLoadDocument(TiaPortalOpenness.Models.ProjectTree.Object? e)
     {
         if (e is null) return;
 
@@ -204,17 +206,17 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
         switch (e)
         {
-            case Core.Models.ProjectTree.Plc.Blocks.Object plcObject:
+            case TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.Object plcObject:
                 await GetPlcBlock(plcObject);
                 PlcBlock = plcObject;
                 PlcObjects?.Add(plcObject);
                 break;
-            case Core.Models.ProjectTree.Plc.Type plcType:
+            case TiaPortalOpenness.Models.ProjectTree.Plc.Type plcType:
                 await GetPlcBlock(plcType);
                 PlcBlock = plcType;
                 PlcObjects?.Add(plcType);
                 break;
-            case Core.Models.ProjectTree.Plc.Item plcItem:
+            case Item plcItem:
                 FolderName = plcItem.Name;
                 await RecursiveBlock(plcItem, progress);
                 break;
@@ -224,7 +226,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
 
     }
 
-    private async Task RecursiveBlock(Core.Models.ProjectTree.Plc.Object plcObject, ProgressDialogController progressDialog)
+    private async Task RecursiveBlock(TiaPortalOpenness.Models.ProjectTree.Plc.Object plcObject, ProgressDialogController progressDialog)
     {
         if(plcObject.Items?.Count > 0)
         {
@@ -232,12 +234,12 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
             {
                 switch(item)
                 {
-                    case Core.Models.ProjectTree.Plc.Blocks.Object plcBlock:
+                    case TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.Object plcBlock:
                         progressDialog.SetMessage(plcBlock.Name);
                         await GetPlcBlock(plcBlock);
                         PlcObjects?.Add(plcBlock);
                         break;
-                    case Core.Models.ProjectTree.Plc.Item plcItem:
+                    case Item plcItem:
                         await RecursiveBlock(plcItem, progressDialog);
                         break;
                 }
@@ -245,7 +247,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         }
     }
 
-    private async Task GetPlcBlock(Core.Models.ProjectTree.Plc.Blocks.Object plcObject)
+    private async Task GetPlcBlock(TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.Object plcObject)
     {
         if (PlcObjects?.Any(a => a.Name == plcObject.Name) != true)
             await plcService.GetMetaDataBlockAsync(plcObject);
@@ -279,7 +281,7 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
         }
     }
 
-    private async Task GetPlcBlock(Core.Models.ProjectTree.Plc.Type plcType)
+    private async Task GetPlcBlock(TiaPortalOpenness.Models.ProjectTree.Plc.Type plcType)
     {
         if (PlcObjects?.Any(a => a.Name == plcType.Name) != true)
             await plcService.GetMetaDataBlockAsync(plcType);
@@ -317,8 +319,8 @@ public class DocumentViewModel(IShellWindow shellWindow, IDialogCoordinator dial
     {
         var projectName = $"{opennessService.ProjectName}_{FolderName ?? string.Empty}{PlcBlock?.Name ?? string.Empty}";
 
-        List<Core.Models.ProjectTree.Object> projectItems = PlcObjects is null ? [] : [.. PlcObjects];
-        List<Core.Models.ProjectTree.Object> derivedTypes = DerivedTypes is null? [] : [.. DerivedTypes];
+        List<TiaPortalOpenness.Models.ProjectTree.Object> projectItems = PlcObjects is null ? [] : [.. PlcObjects];
+        List<TiaPortalOpenness.Models.ProjectTree.Object> derivedTypes = DerivedTypes is null? [] : [.. DerivedTypes];
 
         if(ReferenceLanguage is null) return;
 

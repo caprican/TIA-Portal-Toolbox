@@ -6,6 +6,8 @@ using Markdig;
 
 using Microsoft.Extensions.Options;
 
+using TiaPortalOpenness.Models;
+
 using TiaPortalToolbox.Doc.Contracts.Builders;
 
 using static DocumentFormat.OpenXml.Wordprocessing.TableExtensions;
@@ -13,7 +15,7 @@ using static DocumentFormat.OpenXml.Wordprocessing.TableExtensions;
 namespace TiaPortalToolbox.Doc.Builders;
 
 public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, WordprocessingDocument document
-                                , Core.Models.ProjectTree.Plc.Blocks.Object plcItem, IEnumerable<Core.Models.ProjectTree.Plc.Object> derivedItems) : IPageBuilder
+                                , TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.Object plcItem, IEnumerable<TiaPortalOpenness.Models.ProjectTree.Plc.Object> derivedItems) : IPageBuilder
 {
     private readonly Models.DocumentSettings settings = settings.Value;
     private readonly WordprocessingDocument document = document;
@@ -27,7 +29,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
 
     public void Build()
     {
-        List<Core.Models.ProjectTree.Plc.Object> functionUserDefines = [];
+        List<TiaPortalOpenness.Models.ProjectTree.Plc.Object> functionUserDefines = [];
 
         document.BodyAppend(new Paragraph(new Run(new Text(plcItem.Name)))
         {
@@ -89,7 +91,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         var blockDraw = new GraphicBlockBuilder(settings);
         document.BodyAppend(blockDraw.BlockDraw(plcItem.DisplayName ?? plcItem.Name, plcItem.IsSafetyBlock, plcItem.Members?[settings.Culture]));
 
-        var inputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Input);
+        var inputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == DirectionMember.Input);
         if (inputMember.Any())
         {
             document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.InputParameterParagraph)))
@@ -112,7 +114,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             });
         }
 
-        var outputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Output);
+        var outputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == DirectionMember.Output);
         if (outputMember?.Count() > 0)
         {
             document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.OutputParameterParagraph)))
@@ -135,7 +137,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             });
         }
 
-        var inoutputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.InOutput);
+        var inoutputMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == DirectionMember.InOutput);
         if (inoutputMember?.Count() > 0)
         {
             document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.InOutParameterParagraph)))
@@ -158,7 +160,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
             });
         }
 
-        var staticMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == Core.Models.DirectionMember.Static);
+        var staticMember = plcItem.Members?[settings.Culture].Where(member => member.Direction == DirectionMember.Static);
         if (staticMember?.Count() > 0)
         {
             document.BodyAppend(new Paragraph(new Run(new Text(Properties.Resources.StaticsParameterParagraph)))
@@ -191,7 +193,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
                 }
             });
             var chapterBuilder = new UserDatatypeChapter(settings, document);
-            foreach (var userDefineType in functionUserDefines.OfType<Core.Models.ProjectTree.Plc.Type>())
+            foreach (var userDefineType in functionUserDefines.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Type>())
             {
                 var paragraph = new Paragraph
                 {
@@ -279,7 +281,7 @@ public class PlcBlockPageBuilder(IOptions<Models.DocumentSettings> settings, Wor
         }
     }
 
-    private void GenerateTableParameter(IEnumerable<Core.Models.InterfaceMember> members)
+    private void GenerateTableParameter(IEnumerable<InterfaceMember> members)
     {
         var _asDefaultValue = members.Any(member => !string.IsNullOrEmpty(member.DefaultValue));
 

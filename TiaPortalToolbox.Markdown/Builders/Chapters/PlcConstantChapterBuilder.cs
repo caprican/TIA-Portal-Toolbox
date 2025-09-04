@@ -3,6 +3,8 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
+using TiaPortalOpenness.Models;
+
 namespace TiaPortalToolbox.Doc.Builders;
 
 internal class PlcConstantChapterBuilder(Models.DocumentSettings settings, WordprocessingDocument document)
@@ -14,7 +16,7 @@ internal class PlcConstantChapterBuilder(Models.DocumentSettings settings, Wordp
 
     private Markdig.Renderers.Docx.DocumentStyleTable? tableStyle;
 
-    public Table Build(Core.Models.ProjectTree.Plc.Tag constant)
+    public Table Build(TiaPortalOpenness.Models.ProjectTree.Plc.Tag constant)
     {
         //DescriptionColumnSize = tableStyle.TableSize - IdentifierColumnSize - settings.DataTypeColumnSize - settings.DefaultValueColumnSize;
         tableStyle = settings.DocumentStyle.TableStyles["Default"] as Markdig.Renderers.Docx.DocumentStyleTable;
@@ -35,7 +37,7 @@ internal class PlcConstantChapterBuilder(Models.DocumentSettings settings, Wordp
         return table;
     }
 
-    private TableRow[] BuildCorp(List<Core.Models.InterfaceMember> members, CultureInfo culture)
+    private TableRow[] BuildCorp(List<InterfaceMember> members, CultureInfo culture)
     {
         var rows = new List<TableRow>();
         foreach (var member in members)
@@ -50,7 +52,7 @@ internal class PlcConstantChapterBuilder(Models.DocumentSettings settings, Wordp
         return [.. rows];
     }
 
-    private TableRow AddRow(Core.Models.InterfaceMember member, CultureInfo culture, bool isLastRow)
+    private TableRow AddRow(InterfaceMember member, CultureInfo culture, bool isLastRow)
     {
         var tableRow = new TableRow
         {

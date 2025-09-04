@@ -1,10 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
+using TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.DataBlocks;
+
 namespace TiaPortalToolbox.Models
 {
-    public class Connexion(Core.Models.ProjectTree.Connexion connexion) : ObservableObject
+    public class Connexion(TiaPortalOpenness.Models.ProjectTree.Connexion connexion) : ObservableObject
     {
-        public readonly Core.Models.ProjectTree.Connexion connexion = connexion;
+        public readonly TiaPortalOpenness.Models.ProjectTree.Connexion connexion = connexion;
         private bool selected;
         private string? alarmClassDefaut;
 
@@ -13,7 +15,7 @@ namespace TiaPortalToolbox.Models
         public string PlcName => connexion.PlcName;
         public IEnumerable<string>? AlarmClasses => connexion.AlarmClasses;
 
-        public IEnumerable<Core.Models.ProjectTree.Plc.Blocks.DataBlocks.DataBlock>? Blocks => connexion.Blocks;
+        public IEnumerable<DataBlock>? Blocks => connexion.Blocks;
         
         public string? AlarmClassDefault 
         { 

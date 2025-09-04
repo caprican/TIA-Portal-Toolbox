@@ -3,14 +3,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using TiaPortalOpenness.Contracts.Services;
+
 using TiaPortalToolbox.Contracts.Services;
 
 namespace TiaPortalToolbox.ViewModels.Dialogs;
 
 public partial class PreSelectionAssemblyVersionViewModel(Action<PreSelectionAssemblyVersionViewModel> closeHandler,
-                                                          Core.Contracts.Services.IOpennessService opennessService, ISettingsService settingsService) : ObservableObject
+                                                          IOpennessService opennessService, ISettingsService settingsService) : ObservableObject
 {
-    private readonly Core.Contracts.Services.IOpennessService opennessService = opennessService;
+    private readonly IOpennessService opennessService = opennessService;
     private readonly ISettingsService settingsService = settingsService;
 
     private ICommand? closeCommand;

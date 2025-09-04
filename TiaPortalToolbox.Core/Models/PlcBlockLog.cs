@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace TiaPortalToolbox.Core.Models;
+﻿namespace TiaPortalToolbox.Core.Models;
 
 public record PlcBlockLog
 {

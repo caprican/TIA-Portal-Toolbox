@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 
 using Fluent;
+
 using MahApps.Metro.Controls;
 
 using TiaPortalToolbox.Behaviors;
@@ -13,7 +14,7 @@ namespace TiaPortalToolbox.Views;
 
 public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 {
-    private Core.Models.ProjectTree.Object? selectedItem;
+    private TiaPortalOpenness.Models.ProjectTree.Object? selectedItem;
 
     public RibbonTitleBar? TitleBar
     {
@@ -25,9 +26,9 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 
     public static readonly DependencyProperty TitleBarProperty = TitleBarPropertyKey.DependencyProperty;
 
-    public event EventHandler<Core.Models.ProjectTree.Object?>? SelectedItemChanged;
+    public event EventHandler<TiaPortalOpenness.Models.ProjectTree.Object?>? SelectedItemChanged;
 
-    public Core.Models.ProjectTree.Object? SelectedItem => selectedItem;
+    public TiaPortalOpenness.Models.ProjectTree.Object? SelectedItem => selectedItem;
 
     public ShellWindow(IPageService pageService, ShellViewModel viewModel, INavigationService navigationService)
     {
@@ -63,7 +64,7 @@ public partial class ShellWindow : MetroWindow, IShellWindow, IRibbonWindow
 
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        if(e.NewValue is Core.Models.ProjectTree.Object item)
+        if(e.NewValue is TiaPortalOpenness.Models.ProjectTree.Object item)
         {
             selectedItem = item;
             SelectedItemChanged?.Invoke(this, item);

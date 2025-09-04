@@ -8,9 +8,10 @@ using CommunityToolkit.Mvvm.Input;
 
 using MahApps.Metro.Controls;
 
+using TiaPortalOpenness.Contracts.Services;
+using TiaPortalOpenness.Models.ProjectTree;
+
 using TiaPortalToolbox.Contracts.Services;
-using TiaPortalToolbox.Core.Contracts.Services;
-using TiaPortalToolbox.Core.Models.ProjectTree;
 using TiaPortalToolbox.Properties;
 
 namespace TiaPortalToolbox.ViewModels;
@@ -29,7 +30,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     private ICommand? exportItemCommand;
     private ICommand? buildDocumentsCommand;
     private bool paneOpen = false;
-    private ObservableCollection<Core.Models.ProjectTree.Object>? projectTreeItems;
+    private ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Object>? projectTreeItems;
 
     public RelayCommand GoBackCommand => goBackCommand ??= new RelayCommand(OnGoBack, CanGoBack);
 
@@ -37,7 +38,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
     public ICommand UnloadedCommand => unloadedCommand ??= new RelayCommand(OnUnloaded);
 
     public ICommand ExportItemCommand => exportItemCommand ??= new AsyncRelayCommand<Item>(OnExport);
-    public ICommand BuildDocumentsCommand => buildDocumentsCommand ??= new AsyncRelayCommand<Core.Models.ProjectTree.Object?>(OnBuildDocuments);
+    public ICommand BuildDocumentsCommand => buildDocumentsCommand ??= new AsyncRelayCommand<TiaPortalOpenness.Models.ProjectTree.Object?>(OnBuildDocuments);
 
     public bool PaneOpen
     {
@@ -45,7 +46,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
         set => SetProperty(ref paneOpen, value);
     }
 
-    public ObservableCollection<Core.Models.ProjectTree.Object>? ProjectTreeItems
+    public ObservableCollection<TiaPortalOpenness.Models.ProjectTree.Object>? ProjectTreeItems
     {
         get => projectTreeItems;
         set => SetProperty(ref projectTreeItems, value);
@@ -119,7 +120,7 @@ public partial class ShellViewModel(INavigationService navigationService, IDialo
         await progress.CloseAsync();
     }
 
-    private async Task OnBuildDocuments(Core.Models.ProjectTree.Object? items)
+    private async Task OnBuildDocuments(TiaPortalOpenness.Models.ProjectTree.Object? items)
     {
         if(items is null) return;
 

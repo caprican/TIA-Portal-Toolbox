@@ -18,7 +18,7 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
 
     private WordprocessingDocument? document;
 
-    public void CreateDocumentWithTemplate(Core.Models.ProjectTree.Plc.Object plcItem, string templatePath, string path, bool clean = false)
+    public void CreateDocumentWithTemplate(TiaPortalOpenness.Models.ProjectTree.Plc.Object plcItem, string templatePath, string path, bool clean = false)
     {
         File.Copy(templatePath, path);
 
@@ -60,7 +60,7 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
         }
     }
 
-    public Task CreateDocument(List<Core.Models.ProjectTree.Object> projetItems, List<Core.Models.ProjectTree.Object> derivedItems)
+    public Task CreateDocument(List<TiaPortalOpenness.Models.ProjectTree.Object> projetItems, List<TiaPortalOpenness.Models.ProjectTree.Object> derivedItems)
     {
         var tcs = new TaskCompletionSource<bool>();
         ThreadPool.QueueUserWorkItem(_ =>
@@ -93,32 +93,32 @@ public class DocumentBuilder(IOptions<Models.DocumentSettings> settings, IPageFa
                 //    document.MarkdownConvert()
                 //}
 
-                var plcBlocks = projetItems.OfType<Core.Models.ProjectTree.Plc.Blocks.Object>();
+                var plcBlocks = projetItems.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Blocks.Object>();
                 if(plcBlocks.Any())
                 {
                     mainDocumentPart.AddParagraph(Properties.Resources.ProgramBlockHeader, style.Headings[1]);
                     foreach (var plcItem in plcBlocks)
                     {
-                        var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                        var derivedPLcItems = projetItems.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Type>();
                         pageFactory.CreatePage(document, plcItem, derivedPLcItems)?.Build();
 
                         body.Append(new Paragraph(new Run(new Break(){ Type = BreakValues.Page })));
                     }
                 }
 
-                var plcUserTypes = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                var plcUserTypes = projetItems.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Type>();
                 if (plcUserTypes.Any())
                 {
                     mainDocumentPart.AddParagraph(Properties.Resources.DatatypeHeader, style.Headings[1]);
                     foreach (var plcItem in plcUserTypes)
                     {
-                        var derivedPLcItems = projetItems.OfType<Core.Models.ProjectTree.Plc.Type>();
+                        var derivedPLcItems = projetItems.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Type>();
                         pageFactory.CreatePage(document, plcItem, derivedPLcItems)?.Build();
                     }
                     body.Append(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
                 }
 
-                var plcTags = projetItems.OfType<Core.Models.ProjectTree.Plc.Tag>();
+                var plcTags = projetItems.OfType<TiaPortalOpenness.Models.ProjectTree.Plc.Tag>();
                 if (plcTags.Any())
                 {
                     mainDocumentPart.AddParagraph(Properties.Resources.TagsConstantsHeader, style.Headings[1]);

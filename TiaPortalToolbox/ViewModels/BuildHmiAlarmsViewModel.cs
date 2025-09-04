@@ -8,9 +8,9 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Extensions.Options;
 
+using TiaPortalOpenness.Contracts.Services;
+
 using TiaPortalToolbox.Contracts.ViewModels;
-using TiaPortalToolbox.Core.Contracts.Services;
-using TiaPortalToolbox.Core.Services;
 using TiaPortalToolbox.Models;
 using TiaPortalToolbox.Properties;
 using TiaPortalToolbox.Table.Contracts.Builders;

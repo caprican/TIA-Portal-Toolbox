@@ -1,15 +1,16 @@
-﻿
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using TiaPortalOpenness.Contracts.Services;
+
 namespace TiaPortalToolbox.ViewModels.Dialogs;
 
 public class SelectProjectViewModel(Action<SelectProjectViewModel> closeHandler, Action<SelectProjectViewModel> openHandler,
-                                    Core.Contracts.Services.IOpennessService opennessService) : ObservableObject
+                                    IOpennessService opennessService) : ObservableObject
 {
-    private readonly Core.Contracts.Services.IOpennessService opennessService = opennessService;
+    private readonly IOpennessService opennessService = opennessService;
 
     private ICommand? closeCommand;
     private ICommand? attachCommand;

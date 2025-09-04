@@ -1,14 +1,16 @@
 ﻿using MahApps.Metro.Controls;
+
 using System.Windows.Controls;
+
 using TiaPortalToolbox.Behaviors;
 
 namespace TiaPortalToolbox.Contracts.Views;
 
 public interface IShellWindow
 {
-    public event EventHandler<Core.Models.ProjectTree.Object?>? SelectedItemChanged;
+    public event EventHandler<TiaPortalOpenness.Models.ProjectTree.Object?>? SelectedItemChanged;
 
-    public Core.Models.ProjectTree.Object? SelectedItem { get; }
+    public TiaPortalOpenness.Models.ProjectTree.Object? SelectedItem { get; }
 
     Frame? GetNavigationFrame();
 

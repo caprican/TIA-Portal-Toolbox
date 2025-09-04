@@ -1,11 +1,12 @@
 ﻿using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using TiaPortalToolbox.Contracts.Services;
 
+using TiaPortalOpenness.Contracts.Services;
+
+using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.ViewModels;
 using TiaPortalToolbox.Contracts.Views;
-using TiaPortalToolbox.Core.Contracts.Services;
 
 namespace TiaPortalToolbox.ViewModels;
 

@@ -4,6 +4,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
+using TiaPortalOpenness.Models;
+
 namespace TiaPortalToolbox.Doc.Builders;
 
 internal class UserDatatypeChapter(Models.DocumentSettings settings, WordprocessingDocument document)
@@ -14,7 +16,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
     private int IdentifierColumnSize = 1418;
     private int DescriptionColumnSize;
 
-    public void Build(Core.Models.ProjectTree.Plc.Type userDefineType)
+    public void Build(TiaPortalOpenness.Models.ProjectTree.Plc.Type userDefineType)
     {
         if (!string.IsNullOrEmpty(userDefineType.Descriptions?[settings.Culture]))
         {
@@ -26,7 +28,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
         BuildTable(userDefineType);
     }
 
-    private void BuildTable(Core.Models.ProjectTree.Plc.Type userDefineType)
+    private void BuildTable(TiaPortalOpenness.Models.ProjectTree.Plc.Type userDefineType)
     {
         var levelMax = GetLevelCount(userDefineType.Members?[settings.Culture]);
 
@@ -141,7 +143,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
         document.BodyAppend(table);
     }
 
-    private int GetLevelCount(List<Core.Models.InterfaceMember>? members)
+    private int GetLevelCount(List<InterfaceMember>? members)
     {
         if (members is null) return 0;
 
@@ -157,7 +159,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
         return levelMax;
     }
 
-    private TableRow[] BuildCorp(List<Core.Models.InterfaceMember> members, int level, int levelMax)
+    private TableRow[] BuildCorp(List<InterfaceMember> members, int level, int levelMax)
     {
         var rows = new List<TableRow>();
         foreach (var member in members)
@@ -172,7 +174,7 @@ internal class UserDatatypeChapter(Models.DocumentSettings settings, Wordprocess
         return [.. rows];
     }
 
-    private TableRow AddRow(Core.Models.InterfaceMember member, CultureInfo culture, int level, int levelMax, bool isLastRow)
+    private TableRow AddRow(InterfaceMember member, CultureInfo culture, int level, int levelMax, bool isLastRow)
     {
         var tableStyle = settings.DocumentStyle.TableStyles["Default"] as Markdig.Renderers.Docx.DocumentStyleTable;
 

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using TiaPortalOpenness.Helpers;
+
 using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.Views;
 using TiaPortalToolbox.Core.Contracts.Services;
@@ -31,8 +33,8 @@ public partial class App : Application
 
     public App()
     {
-        AppDomain.CurrentDomain.AssemblyResolve += Core.Helpers.Resolver.OnResolve;
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += Core.Helpers.Resolver.OnResolve;
+        AppDomain.CurrentDomain.AssemblyResolve += Resolver.OnResolve;
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += Resolver.OnResolve;
     }
 
     private async void OnStartup(object sender, StartupEventArgs e)
@@ -46,7 +48,7 @@ public partial class App : Application
                     c.SetBasePath(appLocation!);
                 })
                 .ConfigureServices(ConfigureServices)
-                .ConfigureServices(Core.App.ConfigureService)
+                .ConfigureServices(TiaPortalOpenness.App.ConfigureService)
                 .ConfigureServices(Doc.App.ConfigureService)
                 .ConfigureServices(Table.App.ConfigureService)
                 .Build();

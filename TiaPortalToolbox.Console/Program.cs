@@ -3,13 +3,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using TiaPortalToolbox.Core.Contracts.Services;
+using TiaPortalOpenness.Helpers;
+using TiaPortalOpenness.Services;
 
-using TiaPortalToolbox.Core.Services;
+using TiaPortalToolbox.Core.Contracts.Services;
 using TiaPortalToolbox.Doc.Builders;
 
-AppDomain.CurrentDomain.AssemblyResolve += TiaPortalToolbox.Core.Helpers.Resolver.OnResolve;
-AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += TiaPortalToolbox.Core.Helpers.Resolver.OnResolve;
+AppDomain.CurrentDomain.AssemblyResolve += Resolver.OnResolve;
+AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += Resolver.OnResolve;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((services) =>
@@ -46,8 +47,8 @@ public class Worker(IHostApplicationLifetime hostApplicationLifetime, IOpennessS
         opennessService.Initialize("18.0", "18.0");
         var projectName = "SKF libraries";
 
-        List<TiaPortalToolbox.Core.Models.ProjectTree.Object> projectItems = [];
-        List<TiaPortalToolbox.Core.Models.ProjectTree.Object> derivedItems = [];
+        List<TiaPortalOpenness.Models.ProjectTree.Object> projectItems = [];
+        List<TiaPortalOpenness.Models.ProjectTree.Object> derivedItems = [];
 
         var fileName = @$"C:\Users\capri\OneDrive\Documents\Automation\TIA069_1\UserFiles\Export\LSKF_DigitalInput.xml";
         projectItems.Add(await plcService.GetMetaDataBlockAsync(fileName));

@@ -11,7 +11,7 @@
                       xmlns:Fluent="urn:fluent-ribbon"
                       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
                       xmlns:properties="clr-namespace:TiaPortalToolbox.Properties"
-                      xmlns:projectTree="clr-namespace:TiaPortalToolbox.Core.Models.ProjectTree;assembly=TiaPortalToolbox.Core"
+                      xmlns:projectTree="clr-namespace:TiaPortalOpenness.Models.ProjectTree;assembly=TiaPortalOpenness"
                       xmlns:views="clr-namespace:TiaPortalToolbox.Views"
                       xmlns:viewModels="clr-namespace:TiaPortalToolbox.ViewModels"
                       ShowSystemMenuOnRightClick="False"

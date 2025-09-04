@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Win32;
 
+using TiaPortalOpenness.Contracts.Services;
+
 using TiaPortalToolbox.Contracts.Services;
 using TiaPortalToolbox.Contracts.ViewModels;
 using TiaPortalToolbox.Properties;
@@ -13,11 +15,11 @@ using TiaPortalToolbox.Properties;
 namespace TiaPortalToolbox.ViewModels;
 
 public class NoProjectViewModel(INavigationService navigationService, IDialogCoordinator dialogCoordinator, 
-                                Core.Contracts.Services.IOpennessService opennessService) : ObservableObject, INavigationAware
+                                IOpennessService opennessService) : ObservableObject, INavigationAware
 {
     private readonly INavigationService navigationService = navigationService;
     private readonly IDialogCoordinator dialogCoordinator = dialogCoordinator;
-    private readonly Core.Contracts.Services.IOpennessService opennessService = opennessService;
+    private readonly IOpennessService opennessService = opennessService;
 
     private ICommand? openCommand;
     private ICommand? attachCommand;

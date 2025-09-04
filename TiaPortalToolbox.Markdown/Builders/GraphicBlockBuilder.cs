@@ -1,5 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 
+using TiaPortalOpenness.Models;
+
 namespace TiaPortalToolbox.Doc.Builders;
 
 internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
@@ -9,7 +11,7 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
     private uint functionBlockCenterSize;
     private Models.GraphicBlocStyle? blockStyle;
 
-    internal Table BlockDraw(string blockName, bool isSafetyBlock, List<Core.Models.InterfaceMember>? interfaceMember = null)
+    internal Table BlockDraw(string blockName, bool isSafetyBlock, List<InterfaceMember>? interfaceMember = null)
     {
         var documentStyle = settings.DocumentStyle as Models.DocumentStyles ?? throw new InvalidOperationException("Document style is not set.");
         blockStyle = documentStyle.TableStyles["Block"] as Models.GraphicBlocStyle ?? throw new InvalidOperationException("Block style is not set.");
@@ -252,17 +254,17 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
         return tableRow;
     }
 
-    private TableRow[] AddTableFunctionRow(List<Core.Models.InterfaceMember> members)
+    private TableRow[] AddTableFunctionRow(List<InterfaceMember> members)
     {
         var rows = new List<TableRow>();
-        var inputsMembers = members?.Where(member => member.Direction == Core.Models.DirectionMember.Input).ToList();
-        var outputsMembers = members?.Where(member => member.Direction == Core.Models.DirectionMember.Output).OrderBy(o => !o.Islocked).ToList();
+        var inputsMembers = members?.Where(member => member.Direction == DirectionMember.Input).ToList();
+        var outputsMembers = members?.Where(member => member.Direction == DirectionMember.Output).OrderBy(o => !o.Islocked).ToList();
 
         var membersCount = inputsMembers is null && outputsMembers is null ? 0 : Math.Max(inputsMembers?.Count ?? 0, outputsMembers?.Count ?? 0);
         var membersStart = inputsMembers is null && outputsMembers is null ? 0 : Math.Min(inputsMembers?.Count ?? 0, outputsMembers?.Count ?? 0);
-        Core.Models.InterfaceMember memberEmpty = new ()
+        InterfaceMember memberEmpty = new ()
         {
-            Direction = Core.Models.DirectionMember.Other
+            Direction = DirectionMember.Other
         };
 
         if (inputsMembers?.Count == membersStart)
@@ -274,8 +276,8 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
             outputsMembers.AddRange(Enumerable.Repeat(memberEmpty, membersCount - membersStart));
         }
 
-        inputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput)!);
-        outputsMembers?.AddRange(members?.Where(member => member.Direction == Core.Models.DirectionMember.InOutput)!);
+        inputsMembers?.AddRange(members?.Where(member => member.Direction == DirectionMember.InOutput)!);
+        outputsMembers?.AddRange(members?.Where(member => member.Direction == DirectionMember.InOutput)!);
 
         for (var i = 0; i < inputsMembers?.Count; i++)
         {
@@ -288,17 +290,17 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
                 TableRowProperties = new TableRowProperties()
             };
 
-            var cells = MnemonicName(inputsMembers[i], Core.Models.DirectionMember.Input);
+            var cells = MnemonicName(inputsMembers[i], DirectionMember.Input);
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
 
-            cells = Connector(inputsMembers[i], Core.Models.DirectionMember.Input);
+            cells = Connector(inputsMembers[i], DirectionMember.Input);
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
 
-            if (inputsMembers[i]?.Direction != Core.Models.DirectionMember.InOutput)
+            if (inputsMembers[i]?.Direction != DirectionMember.InOutput)
             {
-                cells = MnemonicType(inputsMembers[i], Core.Models.DirectionMember.Input);
+                cells = MnemonicType(inputsMembers[i], DirectionMember.Input);
                 topRow.Append(cells.TopCell);
                 bottomRow.Append(cells.BottomCell);
             }
@@ -307,18 +309,18 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
 
-            if (outputsMembers[i]?.Direction != Core.Models.DirectionMember.InOutput)
+            if (outputsMembers[i]?.Direction != DirectionMember.InOutput)
             {
-                cells = MnemonicType(outputsMembers[i], Core.Models.DirectionMember.Output);
+                cells = MnemonicType(outputsMembers[i], DirectionMember.Output);
                 topRow.Append(cells.TopCell);
                 bottomRow.Append(cells.BottomCell);
             }
 
-            cells = Connector(outputsMembers[i], Core.Models.DirectionMember.Output);
+            cells = Connector(outputsMembers[i], DirectionMember.Output);
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
 
-            cells = MnemonicName(outputsMembers[i], Core.Models.DirectionMember.Output);
+            cells = MnemonicName(outputsMembers[i], DirectionMember.Output);
             topRow.Append(cells.TopCell);
             bottomRow.Append(cells.BottomCell);
             rows.Add(topRow);
@@ -327,37 +329,37 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
         return [.. rows];
     }
 
-    private (TableCell TopCell, TableCell BottomCell) MnemonicName(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
+    private (TableCell TopCell, TableCell BottomCell) MnemonicName(InterfaceMember member, DirectionMember position)
     {
         var shading = member?.Islocked == true ? blockStyle!.ShadingFillLock : blockStyle!.ShadingFill;
         //var styleId = position == Core.Models.DirectionMember.Input ? "TabelleTextrechts" : "TabelleTextlinks";
 
         var direction = position switch
         {
-            Core.Models.DirectionMember.Input => JustificationValues.Right,
-            Core.Models.DirectionMember.Output => JustificationValues.Left,
+            DirectionMember.Input => JustificationValues.Right,
+            DirectionMember.Output => JustificationValues.Left,
             _ => JustificationValues.Center
         };
 
         return Mnemonic($"{blockStyle.FunctionBlockNameSize}", shading, direction, member?.Name ?? string.Empty, member?.HidenInterface == true);
     }
 
-    private (TableCell TopCell, TableCell BottomCell) MnemonicType(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
+    private (TableCell TopCell, TableCell BottomCell) MnemonicType(InterfaceMember member, DirectionMember position)
     {
         var shading = member?.Islocked == true ? blockStyle!.ShadingFillLock : blockStyle!.ShadingFill;
         //var styleId = position == Core.Models.DirectionMember.Output ? "TabelleTextrechts" : "TabelleTextlinks";
 
         var direction = position switch
         {
-            Core.Models.DirectionMember.Output => JustificationValues.Right,
-            Core.Models.DirectionMember.Input => JustificationValues.Left,
+            DirectionMember.Output => JustificationValues.Right,
+            DirectionMember.Input => JustificationValues.Left,
             _ => JustificationValues.Center
         };
 
-        return Mnemonic($"{blockStyle.FunctionBlockTypeSize}", shading, direction, member?.Direction != Core.Models.DirectionMember.InOutput ? member?.Type ?? string.Empty : string.Empty , member?.HidenInterface == true);
+        return Mnemonic($"{blockStyle.FunctionBlockTypeSize}", shading, direction, member?.Direction != DirectionMember.InOutput ? member?.Type ?? string.Empty : string.Empty , member?.HidenInterface == true);
     }
 
-    private (TableCell TopCell, TableCell BottomCell) Connector(Core.Models.InterfaceMember member, Core.Models.DirectionMember position)
+    private (TableCell TopCell, TableCell BottomCell) Connector(InterfaceMember member, DirectionMember position)
     {
         BottomBorder bottomBorder;
         var topLeftBorder = new LeftBorder { Val = BorderValues.Nil };
@@ -368,24 +370,24 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
 
         var color = member?.HidenInterface == true ? blockStyle!.ColorHidden : blockStyle!.BorderColor;
 
-        if (member?.Direction == Core.Models.DirectionMember.Other)
+        if (member?.Direction == DirectionMember.Other)
         {
             bottomBorder = new BottomBorder { Val = BorderValues.Nil };
             shading = blockStyle.ShadingFill;
         }
         else
         {
-            bottomBorder = new BottomBorder { Val = member?.Direction != Core.Models.DirectionMember.InOutput ? BorderValues.Single : BorderValues.Dashed, Space = blockStyle.BorderSpace, Size = blockStyle.BorderSize, Color = color };
+            bottomBorder = new BottomBorder { Val = member?.Direction != DirectionMember.InOutput ? BorderValues.Single : BorderValues.Dashed, Space = blockStyle.BorderSpace, Size = blockStyle.BorderSize, Color = color };
             shading = member?.Islocked == true ? blockStyle.ShadingFillLock : blockStyle.ShadingFill;
         }
 
         switch (position)
         {
-            case Core.Models.DirectionMember.Input:
+            case DirectionMember.Input:
                 topRightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor };
                 bottomRightBorder = new RightBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor };
                 break;
-            case Core.Models.DirectionMember.Output:
+            case DirectionMember.Output:
                 topLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header!.BorderSize, Color = blockStyle.BorderColor };
                 bottomLeftBorder = new LeftBorder { Val = BorderValues.Single, Space = blockStyle.BorderSpace, Size = blockStyle.Header.BorderSize, Color = blockStyle.BorderColor };
                 break;
@@ -444,16 +446,16 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
         return (topCell, bottomCell);
     }
 
-    private (TableCell TopCell, TableCell BottomCell) Center(Core.Models.InterfaceMember member)
+    private (TableCell TopCell, TableCell BottomCell) Center(InterfaceMember member)
     {
-        var isIO = member?.Direction == Core.Models.DirectionMember.InOutput;
+        var isIO = member?.Direction == DirectionMember.InOutput;
         var cellWidth = $"{functionBlockCenterSize + (Convert.ToInt16(isIO) * (2 * blockStyle!.FunctionBlockTypeSize))}";
         var topCell = new TableCell()
         {
             TableCellProperties = new TableCellProperties
             {
                 TableCellWidth = new TableCellWidth { Width = cellWidth, Type = TableWidthUnitValues.Dxa },
-                GridSpan = member?.Direction == Core.Models.DirectionMember.InOutput ? new GridSpan { Val = 3 } : null,
+                GridSpan = member?.Direction == DirectionMember.InOutput ? new GridSpan { Val = 3 } : null,
                 TableCellBorders = new TableCellBorders
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },
@@ -515,7 +517,7 @@ internal class GraphicBlockBuilder(Models.DocumentSettings documentSettings)
             TableCellProperties = new TableCellProperties
             {
                 TableCellWidth = new TableCellWidth { Width = cellWidth, Type = TableWidthUnitValues.Dxa },
-                GridSpan = member?.Direction == Core.Models.DirectionMember.InOutput ? new GridSpan { Val = 3 } : null,
+                GridSpan = member?.Direction == DirectionMember.InOutput ? new GridSpan { Val = 3 } : null,
                 TableCellBorders = new TableCellBorders
                 {
                     TopBorder = new TopBorder { Val = BorderValues.Nil },

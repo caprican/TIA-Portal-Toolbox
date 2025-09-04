@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TiaPortalOpenness\TiaPortalOpenness.csproj" />
     <ProjectReference Include="..\TiaPortalToolbox.Core\TiaPortalToolbox.Core.csproj" />
   </ItemGroup>
 
