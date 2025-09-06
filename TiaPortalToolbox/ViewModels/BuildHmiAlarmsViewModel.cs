@@ -105,24 +105,24 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
 
     private async Task OnBuildTags()
     {
-        var defaultAlarmsClass = "Alarm";
+        //var defaultAlarmsClass = "Alarm";
 
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildTagsTitle, Resources.BuildHmiAlarmsPageBuildTagsText);
         progress.SetIndeterminate();
 
-        await unifiedService.BuildHmiTags(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
+        await unifiedService.BuildHmiTags(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), /*defaultAlarmsClass*/null, false);
 
         await progress.CloseAsync();
     }
 
     private async Task OnBuildAlarms()
     {
-        var defaultAlarmsClass = "Alarm";
+        //var defaultAlarmsClass = "Alarm";
 
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildAlarmsTitle, Resources.BuildHmiAlarmsPageBuildAlarmsText);
         progress.SetIndeterminate();
 
-        await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), defaultAlarmsClass, false);
+        await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), /*defaultAlarmsClass*/null, false);
         
         await progress.CloseAsync();
     }
