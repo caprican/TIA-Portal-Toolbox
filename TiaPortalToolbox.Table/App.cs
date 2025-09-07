@@ -8,6 +8,7 @@ public class App
     public static void ConfigureService(HostBuilderContext context, IServiceCollection services)
     {
         // Builders
-        services.AddTransient<Contracts.Builders.ISpreadsheetBuilder, Builders.SpreadsheetBuilder>();
+        services.AddTransient<Contracts.Builders.ISpreadsheetBuilder, Builders.SpreadsheetHmiAlarmsBuilder>();
+        services.AddTransient<Contracts.Builders.ISpreadsheetBuilder, Builders.SpreadsheetHmiTagsBuilder>();
     }
 }

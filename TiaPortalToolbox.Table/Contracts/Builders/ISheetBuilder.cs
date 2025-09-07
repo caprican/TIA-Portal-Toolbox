@@ -1,6 +1,8 @@
-﻿namespace TiaPortalToolbox.Table.Contracts.Builders;
+﻿using DocumentFormat.OpenXml.Packaging;
+
+namespace TiaPortalToolbox.Table.Contracts.Builders;
 
 public interface ISheetBuilder
 {
-    internal void Build();
+    internal void Build(WorksheetPart worksheetPart);
 }

@@ -4,14 +4,16 @@ using System.Globalization;
 namespace TiaPortalOpenness.Models;
 
 [DebuggerDisplay("{FolderName}/{DataBlockName}.{FullName}")]
-internal record HmiDataBlockTag
+public record HmiDataBlockTag
 {
-    internal string? FullName { get; set; }
-    internal string? DataBlockName { get; set; }
-    internal string? ClassAlarm { get; set; }
-    internal Dictionary<CultureInfo, string>? Descriptions { get; set; }
-    internal string? FolderName { get; set; }
+    public uint Id { get; set; } = 1;
+    public string? FullName { get; set; }
+    public string? DataBlockName { get; set; }
+    public string? ClassAlarm { get; set; }
+    public Dictionary<CultureInfo, string>? Descriptions { get; set; }
+    public string? FolderName { get; set; }
 
-    internal string? Tagname { get; set; }
-    internal string? HmiTagname { get; set; }
+    public string? Tagname { get; set; }
+    public string? HmiTagname { get; set; }
+    public string? Datatype { get; set; }
 }

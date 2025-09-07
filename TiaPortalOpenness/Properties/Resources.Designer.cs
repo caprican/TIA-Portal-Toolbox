@@ -59,5 +59,50 @@ namespace TiaPortalOpenness.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Extract tag from DB.
+        /// </summary>
+        public static string BuildAlarmsExtractTags {
+            get {
+                return ResourceManager.GetString("BuildAlarmsExtractTags", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Build discrete alarms.
+        /// </summary>
+        public static string BuildDiscreteAlarms {
+            get {
+                return ResourceManager.GetString("BuildDiscreteAlarms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Create or update HMI tags.
+        /// </summary>
+        public static string BuildHmiTags {
+            get {
+                return ResourceManager.GetString("BuildHmiTags", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Build tags table&apos;s.
+        /// </summary>
+        public static string BuildHmiTagTable {
+            get {
+                return ResourceManager.GetString("BuildHmiTagTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Create tag table.
+        /// </summary>
+        public static string BuildHmiTagTableCreate {
+            get {
+                return ResourceManager.GetString("BuildHmiTagTableCreate", resourceCulture);
+            }
+        }
     }
 }

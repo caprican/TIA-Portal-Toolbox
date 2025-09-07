@@ -5,11 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 using Siemens.Engineering;
-using Siemens.Engineering.Hmi.Tag;
-using Siemens.Engineering.HmiUnified;
-using Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon;
 using Siemens.Engineering.HmiUnified.HmiTags;
-using Siemens.Engineering.HW;
 
 using SimaticML.SW.Common;
 
@@ -34,7 +30,7 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
         return plcTag;
     }
 
-    public string? GetAlarmsClassName(Models.ProjectTree.Devices.Unified hmiUnified, string classname, string? tagname, string defaultClassname)
+    public string? GetAlarmsClassName(Models.ProjectTree.Devices.Unified hmiUnified, string classname, string? tagname, string? defaultClassname)
     {
         if (hmiUnified.AlarmClasses.Contains(classname))
         {
@@ -48,37 +44,22 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
             return defaultClassname;
     }
 
-    public Task BuildHmiTags(IEnumerable<Models.ProjectTree.Connexion> connexions, string? defaultAlarmsClass, bool simplifyTagname)
+    public Task BuildHmiTags(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage, string? defaultAlarmsClass)
     {
         var tcs = new TaskCompletionSource<IEnumerable<Models.ProjectTree.Connexion>?>();
-        ThreadPool.QueueUserWorkItem(async _ =>
+        ThreadPool.QueueUserWorkItem(_ =>
         {
             try
             {
-                //(var tagFolders, var tags, var alarms) = ExtractHmiTags(Devices, markBlock, defaultAlarmsClass, simplifyTagname);
-                ////foreach (var folder in tagFolders)
-                ////{
-                ////    tiaPortalService.UnifiedTagsFolder(folder);
-
-                ////    Debug.WriteLine($"{DateTime.Now.ToLocalTime()} : {folder.Name}");
-                ////    Log += $"{DateTime.Now.ToLocalTime()} : {folder.Name}\r\n";
-                ////}
-
-                //foreach (var hmi in tags.GroupBy(device => device.Hmi))
-                //{
-                //    tiaPortalService.UnifiedTag(hmi.Key, hmi);
-
-                //    //Debug.WriteLine($"{DateTime.Now.ToLocalTime()} : {tag.Tagname}");
-                //    //Log += $"{DateTime.Now.ToLocalTime()} : {tag.Tagname}\r\n";
-                //}
-
                 if (connexions?.Count() > 0)
                 {
+                    setMessage?.Invoke(Properties.Resources.BuildAlarmsExtractTags);
                     ExtractTagAlarms(connexions, defaultAlarmsClass);
 
-                    BuildHmiTagTables(connexions);
-                    BuildHmiTags(connexions, simplifyTagname);
-                    BuildDiscretAlarms(connexions);
+                    BuildHmiTagTables(connexions, (message) => setMessage?.Invoke($"{Properties.Resources.BuildHmiTagTable}\r\n{message}"));
+
+                    BuildHmiTags(connexions, (message) => setMessage?.Invoke($"{Properties.Resources.BuildHmiTags}\r\n{message}"));
+                    BuildDiscretAlarms(connexions, (message) => setMessage?.Invoke($"{Properties.Resources.BuildDiscreteAlarms}\r\n{message}"));
 
                     //await ExportTagTable(connexions);
                 }
@@ -92,7 +73,7 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
         return tcs.Task;
     }
 
-    public Task BuildHmiAlarms(IEnumerable<Models.ProjectTree.Connexion> connexions, string? defaultAlarmsClass, bool simplifyTagname)
+    public Task BuildHmiAlarms(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage, string? defaultAlarmsClass)
     {
         var tcs = new TaskCompletionSource<IEnumerable<Models.ProjectTree.Connexion>?>();
         ThreadPool.QueueUserWorkItem(_ =>
@@ -101,9 +82,10 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
             {
                 if (connexions?.Count() > 0)
                 {
+                    setMessage?.Invoke(Properties.Resources.BuildAlarmsExtractTags);
                     ExtractTagAlarms(connexions, defaultAlarmsClass);
-                    //BuildHmiTags(connexions, false);
-                    BuildDiscretAlarms(connexions);
+                    
+                    BuildDiscretAlarms(connexions, (message) => setMessage?.Invoke($"{Properties.Resources.BuildDiscreteAlarms}\r\n{message}"));
                 }
                 tcs.SetResult(connexions);
             }
@@ -114,6 +96,28 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
         });
         return tcs.Task;
 
+    }
+
+    public Task GetTagAlarms(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage, string? defaultAlarmsClass)
+    {
+        var tcs = new TaskCompletionSource<IEnumerable<Models.ProjectTree.Connexion>?>();
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                if (connexions?.Count() > 0)
+                {
+                    setMessage?.Invoke(Properties.Resources.BuildAlarmsExtractTags);
+                    ExtractTagAlarms(connexions, defaultAlarmsClass);
+                }
+                tcs.SetResult(connexions);
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetException(ex);
+            }
+        });
+        return tcs.Task;
     }
 
     private List<Models.InterfaceMember> GetInterfaceMember(SimaticML.SW.InterfaceSections.IMember member, string parent = "")
@@ -132,14 +136,14 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
         {
             switch (item)
             {
-                case SimaticML.SW.InterfaceSections.ISections sectionItem:
+                case SimaticML.SW.InterfaceSections.ISections _/*sectionItem*/:
                     break;
                 case SimaticML.SW.InterfaceSections.IMember memberItem:
                     subTags.AddRange(GetInterfaceMember(memberItem, tag.Name));
                     break;
-                case SimaticML.SW.InterfaceSections.IStartValue startValue:
+                case SimaticML.SW.InterfaceSections.IStartValue _/*startValue*/:
                     break;
-                case SimaticML.SW.InterfaceSections.ISubelement subelement:
+                case SimaticML.SW.InterfaceSections.ISubelement _/*subelement*/:
                     break;
             }
         }
@@ -167,6 +171,7 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
     {
         foreach (var connexion in connexions)
         {
+            uint AlarmId = 1;
             if (connexion.Blocks?.Count() > 0 && connexion.PlcDevice is not null && connexion.UnifiedDevice is not null)
             {
                 connexion.Tags ??= [];
@@ -223,6 +228,7 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
                                                             hmiTag.HmiTagname = tagmane.Replace('.', '_');
                                                             hmiTag.ClassAlarm = alarmsClassName;
                                                             hmiTag.Descriptions = member.Descriptions;
+                                                            hmiTag.Id = AlarmId++;
                                                         }
                                                         else
                                                         {
@@ -235,27 +241,28 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
                                                                 ClassAlarm = alarmsClassName,
                                                                 Descriptions = member.Descriptions,
                                                                 FolderName = block.Parent,
+                                                                Id = AlarmId++
                                                             });
                                                         }
 
 
-                                                            //tags.Add(new Models.ProjectTree.Unified.Tag
-                                                            //{
-                                                            //    Hmi = connexion.UnifiedDevice,
-                                                            //    Connexion = connexion.Name,
-                                                            //    PlcTag = $"{(block.Name.Contains(' ') ? $"\"{block.Name}\"" : block.Name)}.{member.Name}",
-                                                            //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
-                                                            //    Folder = block.Parent
-                                                            //});
-                                                            //alarms.Add(new TIAOpennessAdapter.Models.UnifiedAlarm
-                                                            //{
-                                                            //    Hmi = connexion.UnifiedDevice,
-                                                            //    ClassName = alarmsClassName,
-                                                            //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
-                                                            //    Origin = block.Name.Replace(markBlock, string.Empty),
-                                                            //    Descriptions = member.Description,
-                                                            //});
-                                                            break;
+                                                        //tags.Add(new Models.ProjectTree.Unified.Tag
+                                                        //{
+                                                        //    Hmi = connexion.UnifiedDevice,
+                                                        //    Connexion = connexion.Name,
+                                                        //    PlcTag = $"{(block.Name.Contains(' ') ? $"\"{block.Name}\"" : block.Name)}.{member.Name}",
+                                                        //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
+                                                        //    Folder = block.Parent
+                                                        //});
+                                                        //alarms.Add(new TIAOpennessAdapter.Models.UnifiedAlarm
+                                                        //{
+                                                        //    Hmi = connexion.UnifiedDevice,
+                                                        //    ClassName = alarmsClassName,
+                                                        //    Tagname = $"{(simplifyTagname ? block.Name.Replace(markBlock, string.Empty) : block.Name)}_{member.Name.Replace(".", "_")}",
+                                                        //    Origin = block.Name.Replace(markBlock, string.Empty),
+                                                        //    Descriptions = member.Description,
+                                                        //});
+                                                        break;
                                                 }
                                             }
                                         }
@@ -270,7 +277,7 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
         }
     }
 
-    private void BuildHmiTagTables(IEnumerable<Models.ProjectTree.Connexion> connexions)
+    private void BuildHmiTagTables(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage)
     {
         foreach (var connexion in connexions)
         {
@@ -323,13 +330,14 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
                     if (!tagTablesFinded.Any(table => table.Name == tableName))
                     {
                         tagTablesFinded!.Create(tableName);
+                        setMessage?.Invoke($"{Properties.Resources.BuildHmiTagTableCreate} {tableName}");
                     }
                 }
             }
         }
     }
 
-    private void BuildHmiTags(IEnumerable<Models.ProjectTree.Connexion> connexions, bool simplifyTagname)
+    private void BuildHmiTags(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage)
     {
         foreach (var connexion in connexions)
         {
@@ -357,99 +365,16 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
 
             foreach (var dataBlockTag in tags)
             {
+                setMessage?.Invoke($"{dataBlockTag.Tagname} ({tags.IndexOf(dataBlockTag)}/{tags.Count})");
+
                 var hmiTag = string.IsNullOrEmpty(dataBlockTag.FolderName) ? connexion.UnifiedDevice.Device.Tags.Create(dataBlockTag.HmiTagname) : connexion.UnifiedDevice.Device.Tags.Create(dataBlockTag.HmiTagname, dataBlockTag.FolderName);
                 hmiTag.Connection = connexion.Name;
                 hmiTag.PlcTag = dataBlockTag.Tagname;
-                
             }
         }
     }
 
-
-    //public void UnifiedTag(Models.UnifiedTag unifiedTag)
-    //{
-    //    var plcTag = UnifiedPlcTagNormalized(unifiedTag.PlcTag);
-
-    //    var hmiTags = unifiedTag.Hmi.Device.Tags.Where(c => c.PlcTag == plcTag);
-    //    foreach (var hmiTag in hmiTags)
-    //    {
-    //        var tempAlarms = unifiedTag.Hmi.Device.DiscreteAlarms.Where(w => w.RaisedStateTag == hmiTag.Name).Select(s => s.Name);
-    //        foreach (var alarm in tempAlarms)
-    //        {
-    //            unifiedTag.Hmi.Device.DiscreteAlarms.Single(s => s.Name == alarm)?.Delete();
-    //        }
-
-    //        if (hmiTags.Count() > 1)
-    //        {
-    //            hmiTag.Delete();
-    //        }
-    //    }
-
-    //    HmiTag tag;
-    //    if (!unifiedTag.Hmi.Device.Tags.Any(c => c.PlcTag == plcTag))
-    //    {
-    //        if (string.IsNullOrEmpty(unifiedTag.Folder))
-    //            tag = unifiedTag.Hmi.Device.Tags.Create(unifiedTag.Tagname);
-    //        else
-    //            tag = unifiedTag.Hmi.Device.Tags.Create(unifiedTag.Tagname, unifiedTag.Folder);
-    //    }
-    //    else
-    //    {
-    //        tag = unifiedTag.Hmi.Device.Tags.Single(c => c.PlcTag == plcTag);
-    //    }
-    //    tag.Connection = unifiedTag.Hmi.Device.Connections.Single(s => s.Partner == unifiedTag.Connexion).Name;
-    //    tag.PlcTag = plcTag;
-    //    tag.Name = unifiedTag.Tagname;
-
-    //}
-
-    //public void UnifiedTag(Models.Devices.HmiUnifiedDevice device, IEnumerable<Models.UnifiedTag> unifiedTags)
-    //{
-    //    var index = 0;
-    //    var plcTagsUpadted = new List<string>();
-    //    var plcTagsAlarmRemove = new List<string>();
-    //    do
-    //    {
-    //        var plcTag = device.Device.Tags[index].PlcTag;
-
-    //        if (plcTagsUpadted.Contains(plcTag))
-    //        {
-    //            plcTagsAlarmRemove.Add(plcTag);
-    //            device.Device.Tags[index].Delete();
-
-    //        }
-    //        else if (unifiedTags.Any(a => a.PlcTag == plcTag) && !plcTagsUpadted.Contains(plcTag))
-    //        {
-    //            plcTagsUpadted.Add(plcTag);
-
-    //            device.Device.Tags[index].Name = UnifiedPlcTagNormalized(unifiedTags.Single(a => a.PlcTag == plcTag).Tagname);
-    //            //device.Device.Tags[index].TagTableName = unifiedTags.Single(a => a.PlcTag == plcTag).Folder;
-    //            index++;
-
-    //        }
-    //        else
-    //        {
-    //            index++;
-    //        }
-    //    } while (index < device.Device.Tags.Count);
-
-    //    foreach (var tag in unifiedTags)
-    //    {
-    //        if (!plcTagsUpadted.Contains(tag.PlcTag))
-    //        {
-    //            HmiTag hmiTag;
-    //            if (string.IsNullOrEmpty(tag.Folder))
-    //                hmiTag = device.Device.Tags.Create(UnifiedPlcTagNormalized(tag.Tagname));
-    //            else
-    //                hmiTag = device.Device.Tags.Create(UnifiedPlcTagNormalized(tag.Tagname), tag.Folder);
-
-    //            hmiTag.Connection = device.Device.Connections.Single(s => s.Partner == tag.Connexion).Name;
-    //            hmiTag.PlcTag = tag.PlcTag;
-    //        }
-    //    }
-    //}
-
-    private void BuildDiscretAlarms(IEnumerable<Models.ProjectTree.Connexion> connexions)
+    private void BuildDiscretAlarms(IEnumerable<Models.ProjectTree.Connexion> connexions, Action<string> setMessage)
     {
         foreach (var connexion in connexions)
         {
@@ -460,12 +385,10 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
 
             foreach (var dataBlockTag in connexion.Tags)
             {
-                var tagname = UnifiedPlcTagNormalized($"{dataBlockTag.DataBlockName}.{dataBlockTag.FullName}");
-                foreach (var hmiTag in hmiTags.Where(unifiedTag => unifiedTag.PlcTag == tagname))
+                setMessage?.Invoke($"{dataBlockTag.Tagname} {connexion.Tags.IndexOf(dataBlockTag)}/{connexion.Tags.Count}");
+                foreach (var hmiTag in hmiTags.Where(unifiedTag => unifiedTag.PlcTag == dataBlockTag.Tagname))
                 {
-                    //tagnames.Add(dataBlockTag, discreteAlarms.FindAll(f => f.RaisedStateTag == hmiTag.Name).Select(s => s.Name));
-
-                    var alarms = discreteAlarms.Find(f => f.RaisedStateTag == tagname) ?? connexion.UnifiedDevice.Device.DiscreteAlarms.Create(dataBlockTag.HmiTagname);
+                    var alarms = discreteAlarms.Find(f => f.RaisedStateTag == dataBlockTag.HmiTagname) ?? connexion.UnifiedDevice.Device.DiscreteAlarms.Create(dataBlockTag.HmiTagname);
                     alarms.RaisedStateTag = dataBlockTag.HmiTagname;
 
                     if(!string.IsNullOrEmpty(dataBlockTag.ClassAlarm))
@@ -487,31 +410,8 @@ public class UnifiedService(Contracts.Services.IOpennessService opennessService)
                     }
                 }
             }
-
-
         }
     }
-
-    //public void UnifiedAlarm(Models.UnifiedAlarm unifiedAlarm)
-    //{
-    //    var alarms = unifiedAlarm.Hmi.Device.DiscreteAlarms.Find(unifiedAlarm.Tagname) ?? unifiedAlarm.Hmi.Device.DiscreteAlarms.Create(unifiedAlarm.Tagname);
-    //    alarms.RaisedStateTag = unifiedAlarm.Tagname;
-    //    alarms.AlarmClass = unifiedAlarm.Hmi.Device.AlarmClasses.Single(s => s.Name == unifiedAlarm.ClassName)?.Name;
-    //    alarms.Origin = unifiedAlarm.Origin;
-
-    //    if (opennessService.ProjectLanguages?.Count > 0)
-    //    {
-    //        foreach (var lang in opennessService.ProjectLanguages)
-    //        {
-    //            if (alarms.EventText.Items.Single(s => s.Language.Culture.Name == lang.Name) is MultilingualTextItem multilingualText)
-    //            {
-    //                unifiedAlarm.Descriptions.TryGetValue(lang.Name, out string txt);
-    //                multilingualText.Text = $"<body><p>{txt}</p></body>";
-    //            }
-    //        }
-    //    }
-
-    //}
 
     private async Task<List<string>?> ExportTagTable(IEnumerable<Models.ProjectTree.Connexion> connexions)
     {

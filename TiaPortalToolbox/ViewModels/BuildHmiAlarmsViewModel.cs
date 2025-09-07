@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Extensions.Options;
+using Microsoft.Win32;
 
 using TiaPortalOpenness.Contracts.Services;
 
@@ -70,7 +71,6 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
         {
             SetProperty(ref dataBlockMark, value);
             RefreshListCommand.Execute(null);
-
         }
     }
 
@@ -110,7 +110,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildTagsTitle, Resources.BuildHmiAlarmsPageBuildTagsText);
         progress.SetIndeterminate();
 
-        await unifiedService.BuildHmiTags(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), /*defaultAlarmsClass*/null, false);
+        await unifiedService.BuildHmiTags(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), message => progress.SetMessage(message), /*defaultAlarmsClass*/null);
 
         await progress.CloseAsync();
     }
@@ -122,7 +122,7 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, Resources.BuildHmiAlarmsPageBuildAlarmsTitle, Resources.BuildHmiAlarmsPageBuildAlarmsText);
         progress.SetIndeterminate();
 
-        await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), /*defaultAlarmsClass*/null, false);
+        await unifiedService.BuildHmiAlarms(Connexions.Where(w => w.Selected == true).Select(s => s.connexion), message => progress.SetMessage(message), /*defaultAlarmsClass*/null);
         
         await progress.CloseAsync();
     }
@@ -138,26 +138,38 @@ public class BuildHmiAlarmsViewModel(IDialogCoordinator dialogCoordinator, IOpen
         settings.ProjectPath = opennessService.ProjectPath ?? "";
         settings.UserFolderPath = opennessService.UserFolder ?? "";
 
-#if DEBUG
-        settings.SpreadsheetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", $"test.xlsx");
-#else
+        var exportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", $"{opennessService.ProjectName}_HMIAlarms.xlsx");
+#if !DEBUG
         var saveFileDialog = new SaveFileDialog()
         {
             Title = "Select the location to save the document",
-            FileName = $"{projectName}_{ReferenceLanguage?.Name}.docx",
-            Filter = "Word Document (*.docx)|*.docx",
+            FileName = $"{opennessService.ProjectName}_HMIAlarms.xlsx",
+            Filter = "Excel spreadsheet (*.xlsx)|*.xlsx",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
         if (saveFileDialog.ShowDialog() != true)
         {
-            settings.DocumentPath = saveFileDialog.FileName;
+            exportPath = saveFileDialog.FileName;
         }
 #endif
-
         var progress = await dialogCoordinator.ShowProgressAsync(App.Current.MainWindow.DataContext, "", "");
         progress.SetIndeterminate();
 
-        await spreadsheetBuilder.CreateSpreadsheet();
+        var connexions = Connexions.Where(w => w.Selected == true).Select(s => s.connexion);
+        await unifiedService.GetTagAlarms(connexions, message => progress.SetMessage(message), null);
+
+        foreach(var connexion in connexions)
+        {
+            if(opennessService.ProjectLanguages?.Count > 0)
+            {
+                foreach (var language in opennessService.ProjectLanguages)
+                {
+                    settings.SpreadsheetPath = $@"{Path.GetDirectoryName(exportPath)}\{Path.GetFileNameWithoutExtension(exportPath)}_{language.Name}.{Path.GetExtension(exportPath)}";
+                    await spreadsheetBuilder.CreateSpreadsheet(connexion, language);
+                
+                }
+            }
+        }
 
         await progress.CloseAsync();
     }
